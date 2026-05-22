@@ -1,0 +1,153 @@
+﻿@model PCKManagementSystem.Models.ViewModels.WorkloadReportViewModel
+
+<div class="report-container">
+    <div class="text-center mb-4">
+        <h2>@Model.Title</h2>
+        <p class="text-muted">Сгенерирован: @Model.GeneratedAt.ToString("dd.MM.yyyy HH:mm")</p>
+        @if (Model.Parameters.HasParameters)
+        {
+            <div class="alert alert-info">
+                <strong>Параметры:</strong>
+                @if (!string.IsNullOrEmpty(Model.Parameters.AcademicYear))
+                {
+                    <span>Учебный год: @Model.Parameters.AcademicYear</span>
+                }
+                @if (Model.Parameters.Semester.HasValue)
+                {
+                    <span>Семестр: @Model.Parameters.Semester</span>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalTeachers</h3>
+                    <p class="mb-0">Преподавателей</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalDisciplines</h3>
+                    <p class="mb-0">Дисциплин</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalHours</h3>
+                    <p class="mb-0">Всего часов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalGroups</h3>
+                    <p class="mb-0">Учебных групп</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Распределение по типам нагрузки -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Часы по типам нагрузки</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        @foreach (var item in Model.HoursByLoadType)
+                        {
+                            var percent = Model.TotalHours > 0 ? (item.Value * 100) / Model.TotalHours : 0;
+                            <tr>
+                                <td>@item.Key</td>
+                                <td>@item.Value ч.</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" style="width: @percent%">@percent%</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Топ преподавателей по нагрузке</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Преподаватель</th>
+                                <th>Часов</th>
+                                <th>Дисциплин</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.WorkloadByTeacher.OrderByDescending(t => t.TotalHours).Take(5))
+                            {
+                                <tr>
+                                    <td>@item.TeacherName</td>
+                                    <td>@item.TotalHours</td>
+                                    <td>@item.DisciplinesCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальная нагрузка -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Детальная нагрузка</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Преподаватель</th>
+                        <th>Дисциплина</th>
+                        <th>Уч.год</th>
+                        <th>Сем.</th>
+                        <th>Часы</th>
+                        <th>Тип</th>
+                        <th>Форма контроля</th>
+                        <th>Групп</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.WorkloadDetails)
+                    {
+                        <tr>
+                            <td>@item.TeacherName</td>
+                            <td>@item.DisciplineCode</td>
+                            <td>@item.AcademicYear</td>
+                            <td>@item.Semester</td>
+                            <td>@item.Hours</td>
+                            <td>@item.LoadType</td>
+                            <td>@item.ControlType</td>
+                            <td>@item.GroupsCount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

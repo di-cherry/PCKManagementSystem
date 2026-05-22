@@ -1,0 +1,77 @@
+﻿@model PCKManagementSystem.Models.ViewModels.AboutViewModel
+@{
+    ViewData["Title"] = "О системе";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Основная информация -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Model.SystemName</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">Версия @Model.Version</h6>
+                    <p class="lead">@Model.Description</p>
+
+                    <hr />
+
+                    <h5 class="mb-3">Возможности системы:</h5>
+                    <ul class="list-group list-group-flush mb-4">
+                        @foreach (var feature in Model.Features)
+                        {
+                            <li class="list-group-item bg-transparent">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                @feature
+                            </li>
+                        }
+                    </ul>
+
+                    <h5 class="mb-3">Используемые технологии:</h5>
+                    <div class="row">
+                        @foreach (var tech in Model.Technologies)
+                        {
+                            <div class="col-md-6 mb-2">
+                                <span class="badge bg-info p-2 w-100">@tech</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Информация о разработчике -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Разработчик</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle" style="font-size: 5rem; color: #6c757d;"></i>
+                    <h5 class="mt-3">@Model.Developer</h5>
+                    <p class="text-muted">@Model.Year</p>
+                    <hr />
+                    <p class="mb-0">
+                        <small>Дипломный проект</small><br />
+                        <strong>Колледж информатики и программирования</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Контактная информация -->
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-envelope"></i> Контакты</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="bi bi-geo-alt"></i> г. Москва, ул. Образцова, д. 1</p>
+                    <p><i class="bi bi-telephone"></i> +7 (495) 123-45-67</p>
+                    <p><i class="bi bi-envelope"></i> info@pck.ru</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

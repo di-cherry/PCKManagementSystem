@@ -1,0 +1,101 @@
+﻿@model PCKManagementSystem.Models.AuditLog
+@{
+    ViewData["Title"] = "Детали записи аудита";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0">Запись #@Model.Id</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-clock me-2"></i>Время:</dt>
+                        <dd class="col-sm-9">@Model.ActionDate.ToString("dd.MM.yyyy HH:mm:ss")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-person me-2"></i>Пользователь:</dt>
+                        <dd class="col-sm-9">
+                            <strong>@(string.IsNullOrEmpty(Model.UserFullName) ? Model.UserEmail : Model.UserFullName)</strong>
+                            <br />
+                            <span class="text-muted">@Model.UserEmail</span>
+                        </dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-tag me-2"></i>Тип действия:</dt>
+                        <dd class="col-sm-9"><span class="badge bg-info">@Model.ActionType</span></dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-chat-text me-2"></i>Описание:</dt>
+                        <dd class="col-sm-9">@Model.ActionDescription</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-database me-2"></i>Тип сущности:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.EntityType))
+                            {
+                                <span class="badge bg-secondary">@Model.EntityType</span>
+                                if (Model.EntityId.HasValue)
+                                {
+                                    <span> ID: @Model.EntityId</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-wifi me-2"></i>IP адрес:</dt>
+                        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.IpAddress) ? "—" : Model.IpAddress)</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-browser-chrome me-2"></i>User Agent:</dt>
+                        <dd class="col-sm-9"><small class="text-muted">@(string.IsNullOrEmpty(Model.UserAgent) ? "—" : Model.UserAgent)</small></dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-info-circle me-2"></i>Доп. информация:</dt>
+                        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.AdditionalInfo) ? "—" : Model.AdditionalInfo)</dd>
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(Model.OldValuesJson) || !string.IsNullOrEmpty(Model.NewValuesJson))
+                    {
+                        <hr />
+                        <h6><i class="bi bi-arrow-repeat me-2"></i>Изменения данных:</h6>
+                        <div class="row">
+                            @if (!string.IsNullOrEmpty(Model.OldValuesJson))
+                            {
+                                <div class="col-md-6">
+                                    <div class="card border-danger">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Старые значения</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <pre class="mb-0"><code>@Model.OldValuesJson</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.NewValuesJson))
+                            {
+                                <div class="col-md-6">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Новые значения</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <pre class="mb-0"><code>@Model.NewValuesJson</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a asp-action="AuditLog" class="btn btn-secondary rounded-pill">
+                        <i class="bi bi-arrow-left"></i> Назад к журналу
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

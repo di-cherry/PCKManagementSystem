@@ -1,0 +1,95 @@
+﻿@model PCKManagementSystem.Models.ViewModels.UserActivityListViewModel
+@{
+    ViewData["Title"] = "История активности";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        <a asp-action="Index" class="btn btn-secondary rounded-pill">
+            <i class="bi bi-arrow-left"></i> Назад к профилю
+        </a>
+    </div>
+
+    <div class="card shadow rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i> Все действия</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Activities.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var activity in Model.Activities)
+                    {
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge rounded-circle p-2" style="background-color: #e9ecef;">
+                                <i class="bi @activity.IconClass"></i>
+                            </span>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@activity.ActionType</strong>
+                                    <small class="text-muted">@activity.TimeAgo</small>
+                                </div>
+                                <p class="mb-1">@activity.Description</p>
+                                @if (!string.IsNullOrEmpty(activity.EntityType))
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-database"></i> @activity.EntityType
+                                        @if (!string.IsNullOrEmpty(activity.IpAddress))
+                                        {
+                                            <span class="ms-2"><i class="bi bi-wifi"></i> @activity.IpAddress</span>
+                                        }
+                                    </small>
+                                }
+                                @if (!string.IsNullOrEmpty(activity.AdditionalInfo))
+                                {
+                                    <div class="text-muted small mt-1">
+                                        <i class="bi bi-info-circle"></i> @activity.AdditionalInfo
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link rounded-pill" asp-action="Activity" asp-route-page="@(Model.CurrentPage - 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link rounded-pill" asp-action="Activity" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link rounded-pill" asp-action="Activity" asp-route-page="@(Model.CurrentPage + 1)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <p class="text-center text-muted small mt-2">
+                        Показано @(((Model.CurrentPage - 1) * Model.PageSize) + 1) -
+                        @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems) из @Model.TotalItems
+                    </p>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Нет записей о действиях</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

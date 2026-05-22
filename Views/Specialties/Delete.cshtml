@@ -1,0 +1,55 @@
+﻿@model PCKManagementSystem.Models.Specialty
+@{
+    ViewData["Title"] = "Удаление специальности";
+}
+
+<div class="container">
+    <h1 class="mb-4 text-danger"><i class="bi bi-trash3 me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="alert alert-warning">
+        <h5>Вы уверены, что хотите удалить эту специальность?</h5>
+        @if (ViewBag.HasRelatedDisciplines == true)
+        {
+            <p class="text-danger mb-0">
+                <strong>Внимание!</strong> С этой специальностью связаны дисциплины. Удаление невозможно, пока они существуют.
+            </p>
+        }
+        else
+        {
+            <p class="mb-0">Это действие нельзя отменить.</p>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-hash me-2"></i>Код:</dt>
+                        <dd class="col-sm-9">@Model.Code</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-mortarboard me-2"></i>Название:</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
+                    </dl>
+
+                    @if (ViewBag.HasRelatedDisciplines == true)
+                    {
+                        <a asp-action="Index" class="btn btn-secondary rounded-pill">Назад к списку</a>
+                    }
+                    else
+                    {
+                        <form asp-action="Delete" method="post" class="d-flex gap-2">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                <i class="bi bi-trash me-2"></i>Подтвердить удаление
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

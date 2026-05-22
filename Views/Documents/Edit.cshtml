@@ -1,0 +1,113 @@
+﻿@model PCKManagementSystem.Models.Document
+
+@{
+    ViewData["Title"] = "Редактирование документа";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Create" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <!-- Название документа с иконкой -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="control-label fw-semibold required-field">Название документа</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-file-text"></i></span>
+                                <input asp-for="Name" class="form-control" placeholder="Например: Рабочая программа ОП.01" />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Тип и версия в одной строке -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DocumentType" class="control-label fw-semibold required-field">Тип документа</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-tag"></i></span>
+                                        <select asp-for="DocumentType" class="form-control">
+                                            <option value="">-- Выберите тип --</option>
+                                            <option value="Рабочая программа">Рабочая программа</option>
+                                            <option value="ФОС">ФОС (Фонд оценочных средств)</option>
+                                            <option value="УМК">УМК (Учебно-методический комплекс)</option>
+                                            <option value="План работы">План работы</option>
+                                            <option value="Отчет">Отчет</option>
+                                            <option value="Протокол">Протокол заседания</option>
+                                            <option value="Другое">Другое</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="DocumentType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Version" class="control-label fw-semibold required-field">Версия</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-code-square"></i></span>
+                                        <input asp-for="Version" class="form-control" placeholder="Например: 1.0, 2.1" />
+                                    </div>
+                                    <span asp-validation-for="Version" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Дисциплина с иконкой -->
+                        <div class="form-group mb-3">
+                            <label asp-for="DisciplineId" class="control-label fw-semibold required-field">Дисциплина</label>
+                            <div class="input-group">
+                                <select asp-for="DisciplineId" class="form-control select2-discipline" asp-items="ViewBag.DisciplineId">
+                                    <option value="">-- Выберите дисциплину --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="DisciplineId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Поле для файла (без иконки) -->
+                        <div class="form-group mb-4">
+                            <label class="control-label fw-semibold">Заменить файл (необязательно)</label>
+                            <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" required />
+                            <small class="text-muted">Разрешены: PDF, DOC, DOCX, XLS, XLSX, TXT</small>
+                        </div>
+
+                        <!-- Кнопки (закругленные) -->
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary rounded-pill">
+                                <i class="bi bi-upload"></i> Загрузить
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                                <i class="bi bi-arrow-left"></i> Назад к списку
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
+    }
+    <script>
+                $(document).ready(function() {
+            $('.select2-discipline').select2({
+                theme: 'bootstrap-5',        // используем тему Bootstrap 5
+                placeholder: 'Поиск дисциплины...',
+                allowClear: true,
+                language: 'ru',
+                width: '100%',               // чтобы растягивался на всю ширину
+                dropdownAutoWidth: true,
+                selectionCssClass: 'form-control', // дополнительные классы
+                dropdownCssClass: 'shadow-sm'      // тень для выпадающего списка
+            });
+        });
+    </script>
+}

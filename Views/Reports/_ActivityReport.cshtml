@@ -1,0 +1,109 @@
+﻿@model PCKManagementSystem.Models.ViewModels.ActivityReportViewModel
+
+<div class="report-container">
+    <div class="text-center mb-4">
+        <h2>@Model.Title</h2>
+        <p class="text-muted">Период: @Model.Period</p>
+        <p class="text-muted">Сгенерирован: @Model.GeneratedAt.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <!-- Сводная статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalDocuments</h3>
+                    <p class="mb-0">Документов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.ApprovedDocuments</h3>
+                    <p class="mb-0">Утверждено</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalWorkloadHours</h3>
+                    <p class="mb-0">Часов нагрузки</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.CompletedTasks/@Model.TotalTasks</h3>
+                    <p class="mb-0">Задач выполнено</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Активность преподавателей -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">Активность преподавателей</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Преподаватель</th>
+                        <th>Документов</th>
+                        <th>Утверждено</th>
+                        <th>Часов</th>
+                        <th>Задач (поставлено)</th>
+                        <th>Задач (выполнено)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.TeachersActivity.Where(t => t.DocumentsCreated > 0 || t.WorkloadHours > 0 || t.TasksAssigned > 0))
+                    {
+                        <tr>
+                            <td><strong>@item.TeacherName</strong></td>
+                            <td>@item.DocumentsCreated</td>
+                            <td>@item.DocumentsApproved</td>
+                            <td>@item.WorkloadHours</td>
+                            <td>@item.TasksAssigned</td>
+                            <td>@item.TasksCompleted</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Динамика по месяцам -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Динамика активности по месяцам</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Месяц</th>
+                        <th>Создано документов</th>
+                        <th>Создано задач</th>
+                        <th>Выполнено задач</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.MonthlyActivity)
+                    {
+                        <tr>
+                            <td>@item.Month @item.Year</td>
+                            <td>@item.DocumentsCreated</td>
+                            <td>@item.TasksCreated</td>
+                            <td>@item.TasksCompleted</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

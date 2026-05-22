@@ -1,0 +1,132 @@
+﻿@using System.Security.Claims
+@using PCKManagementSystem.Models
+@model PCKManagementSystem.Models.Document
+
+@{
+    ViewData["Title"] = "Просмотр документа";
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentUserId = userIdClaim != null ? int.Parse(userIdClaim) : 0;
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header @(Model.Status == DocumentStatus.Approved ? "bg-success text-white" :
+                                                                  Model.Status == DocumentStatus.Rejected ? "bg-danger text-white" :
+                                                                  Model.Status == DocumentStatus.Review ? "bg-warning" : "bg-secondary text-white")">
+                    <h5 class="mb-0">
+                        <i class="bi @(Model.Status == DocumentStatus.Approved ? "bi-check-circle" :
+                                                                    Model.Status == DocumentStatus.Rejected ? "bi-x-circle" :
+                                                                    Model.Status == DocumentStatus.Review ? "bi-hourglass-split" : "bi-pencil") me-2"></i>
+                        Статус:
+                        @switch (Model.Status)
+                        {
+                            case DocumentStatus.Draft:
+                                <span>Черновик</span>
+                                break;
+                            case DocumentStatus.Review:
+                                <span>На рассмотрении</span>
+                                break;
+                            case DocumentStatus.Approved:
+                                <span>Утвержден</span>
+                                break;
+                            case DocumentStatus.Rejected:
+                                <span>Отклонен</span>
+                                break;
+                        }
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-file-text me-2"></i>Название:</dt>
+                        <dd class="col-sm-9"><strong>@Model.Name</strong></dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-tag me-2"></i>Тип документа:</dt>
+                        <dd class="col-sm-9">@Model.DocumentType</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-code-square me-2"></i>Версия:</dt>
+                        <dd class="col-sm-9">@Model.Version</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-book me-2"></i>Дисциплина:</dt>
+                        <dd class="col-sm-9">@Model.Discipline?.Name</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-person me-2"></i>Автор:</dt>
+                        <dd class="col-sm-9">@Model.Author?.FullName</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-calendar me-2"></i>Дата создания:</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                        @if (Model.ApprovedAt.HasValue)
+                        {
+                            <dt class="col-sm-3"><i class="bi bi-check-circle me-2"></i>Дата утверждения:</dt>
+                            <dd class="col-sm-9">@Model.ApprovedAt.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-3"><i class="bi bi-person-check me-2"></i>Утвердил:</dt>
+                            <dd class="col-sm-9">@Model.ApprovedBy?.FullName</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.FilePath))
+                        {
+                            <dt class="col-sm-3"><i class="bi bi-file-earmark-arrow-down me-2"></i>Файл:</dt>
+                            <dd class="col-sm-9">
+                                <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="bi bi-download"></i> @Model.Name
+                                </a>
+                            </dd>
+                        }
+                    </dl>
+                </div>
+                @if (Model.Status == DocumentStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+                {
+                    <div class="alert alert-danger mt-3">
+                        <strong><i class="bi bi-info-circle"></i> Причина отклонения:</strong><br />
+                        @Model.RejectionReason
+                    </div>
+                }
+                <div class="card-footer d-flex gap-2 flex-wrap">
+                    @if (Model.Status == DocumentStatus.Draft && (Model.AuthorId == currentUserId || User.IsInRole("Администратор")))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning rounded-pill">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+
+                        <form asp-action="SendToReview" asp-route-id="@Model.Id" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary rounded-pill">
+                                <i class="bi bi-send"></i> Отправить на согласование
+                            </button>
+                        </form>
+
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    }
+
+                    @if (Model.Status == DocumentStatus.Review && (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК")))
+                    {
+                        <form asp-action="Approve" asp-route-id="@Model.Id" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success rounded-pill">
+                                <i class="bi bi-check-lg"></i> Утвердить
+                            </button>
+                        </form>
+
+                        <form asp-action="Reject" asp-route-id="@Model.Id" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger rounded-pill">
+                                <i class="bi bi-x-lg"></i> Отклонить
+                            </button>
+                        </form>
+                    }
+
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

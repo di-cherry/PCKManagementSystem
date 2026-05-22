@@ -1,0 +1,168 @@
+﻿@model PCKManagementSystem.Models.ViewModels.ReportParameterViewModel
+@{
+    ViewData["Title"] = "Создание отчета";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Параметры отчета</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Generate" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ReportType" class="control-label fw-semibold required-field">Тип отчета</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-file-earmark-text"></i></span>
+                                        <select asp-for="ReportType" class="form-control" asp-items="Html.GetEnumSelectList<PCKManagementSystem.Models.ViewModels.ReportType>()">
+                                            <option value="">-- Выберите тип отчета --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="ReportType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ReportFormat" class="control-label fw-semibold required-field">Формат</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-filetype-xlsx"></i></span>
+                                        <select asp-for="ReportFormat" class="form-control" asp-items="Html.GetEnumSelectList<PCKManagementSystem.Models.ViewModels.ReportFormat>()">
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="ReportFormat" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h6 class="mb-3"><i class="bi bi-calendar-range me-2"></i>Фильтры по дате</h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StartDate" class="control-label fw-semibold">Начальная дата</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar"></i></span>
+                                        <input asp-for="StartDate" class="form-control" type="date" />
+                                    </div>
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="EndDate" class="control-label fw-semibold">Конечная дата</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar"></i></span>
+                                        <input asp-for="EndDate" class="form-control" type="date" />
+                                    </div>
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h6 class="mb-3"><i class="bi bi-funnel me-2"></i>Дополнительные фильтры</h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AcademicYear" class="control-label fw-semibold">Учебный год</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar-week"></i></span>
+                                        <select asp-for="AcademicYear" class="form-control" asp-items="Model.AcademicYears">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Semester" class="control-label fw-semibold">Семестр</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-1-square"></i></span>
+                                        <select asp-for="Semester" class="form-control">
+                                            <option value="">-- Все --</option>
+                                            <option value="1">1 семестр</option>
+                                            <option value="2">2 семестр</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="TeacherId" class="control-label fw-semibold">Преподаватель</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                        <select asp-for="TeacherId" class="form-control" asp-items="Model.Teachers">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DisciplineId" class="control-label fw-semibold">Дисциплина</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                                        <select asp-for="DisciplineId" class="form-control" asp-items="Model.Disciplines">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="DocumentStatus" class="control-label fw-semibold">Статус документа</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-flag"></i></span>
+                                <select asp-for="DocumentStatus" class="form-control" asp-items="Model.DocumentStatuses">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-file-earmark me-2"></i>Сгенерировать отчет
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Подсказка</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Доступные типы отчетов:</strong></p>
+                    <ul class="small">
+                        <li><i class="bi bi-file-text text-primary"></i> По документам – статистика статусов, по дисциплинам</li>
+                        <li><i class="bi bi-bar-chart text-success"></i> По нагрузке – сводка часов по преподавателям</li>
+                        <li><i class="bi bi-check2-square text-warning"></i> По задачам – выполнение, просроченные</li>
+                        <li><i class="bi bi-activity text-danger"></i> О деятельности ПЦК – общая статистика</li>
+                    </ul>
+                    <p class="mb-0"><i class="bi bi-download"></i> Экспорт в Excel или CSV</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

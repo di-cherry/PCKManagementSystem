@@ -1,0 +1,83 @@
+﻿@model PCKManagementSystem.Models.ViewModels.UserEditViewModel
+@{
+    ViewData["Title"] = "Редактирование пользователя";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="EditUser" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Email" class="control-label fw-semibold required-field"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                        <input asp-for="Email" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FullName" class="control-label fw-semibold required-field"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                        <input asp-for="FullName" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="FullName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="control-label fw-semibold">Роли</label>
+                            <div class="row mt-2">
+                                @foreach (var role in Model.AllRoles)
+                                {
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="SelectedRoles" value="@role.Value"
+                                                   class="form-check-input" id="role_@role.Value"
+                                                   @(Model.SelectedRoles.Contains(role.Value) ? "checked" : "") />
+                                            <label class="form-check-label" for="role_@role.Value">@role.Text</label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Сохранить
+                            </button>
+                            <a asp-action="Users" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

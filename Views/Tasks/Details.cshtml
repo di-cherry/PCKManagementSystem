@@ -1,0 +1,249 @@
+﻿@using System.Security.Claims
+@using TaskStatus = PCKManagementSystem.Models.TaskStatus
+@model PCKManagementSystem.Models.Tasks
+@{
+    ViewData["Title"] = "Просмотр задачи";
+
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var userId = !string.IsNullOrEmpty(userIdClaim) ? int.Parse(userIdClaim) : 0;
+    var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header @(Model.Status == TaskStatus.Completed ? "bg-success text-white" :
+                                                                  Model.Status == TaskStatus.Overdue ? "bg-danger text-white" :
+                                                                  Model.Status == TaskStatus.Cancelled ? "bg-dark text-white" :
+                                                                  Model.Status == TaskStatus.InProgress ? "bg-primary text-white" : "bg-secondary text-white")">
+                    <h5 class="mb-0">
+                        <i class="bi @(Model.Status == TaskStatus.Completed ? "bi-check-circle" :
+                                                                    Model.Status == TaskStatus.Overdue ? "bi-exclamation-triangle" :
+                                                                    Model.Status == TaskStatus.Cancelled ? "bi-x-circle" :
+                                                                    Model.Status == TaskStatus.InProgress ? "bi-arrow-repeat" : "bi-hourglass") me-2"></i>
+                        Статус: @GetStatusDisplay(Model.Status)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-card-heading me-2"></i>Название:</dt>
+                        <dd class="col-sm-9"><h4>@Model.Title</h4></dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-text-paragraph me-2"></i>Описание:</dt>
+                        <dd class="col-sm-9">
+                            @if (string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="text-muted">Нет описания</p>
+                            }
+                            else
+                            {
+                                <p>@Model.Description</p>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-book me-2"></i>Дисциплина:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Discipline != null)
+                            {
+                                <strong>@Model.Discipline.Code</strong>
+                                <text>-</text>
+                                @Model.Discipline.Name
+                                                        }
+                            else
+                            {
+                                <span class="text-muted">Не указана</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-person me-2"></i>Исполнитель:</dt>
+                        <dd class="col-sm-9">@(Model.AssignedTo?.FullName ?? "Не назначен")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-person-plus me-2"></i>Постановщик:</dt>
+                        <dd class="col-sm-9">@(Model.AssignedBy?.FullName ?? "Система")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-calendar-event me-2"></i>Срок выполнения:</dt>
+                        <dd class="col-sm-9">
+                            @Model.DueDate.ToString("dd.MM.yyyy")
+                            @if (Model.Status != TaskStatus.Completed && Model.Status != TaskStatus.Cancelled && Model.DueDate < DateTime.UtcNow)
+                            {
+                                <span class="badge bg-danger">Просрочено!</span>
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.AttachmentFileName))
+                        {
+                            <dt class="col-sm-3"><i class="bi bi-paperclip me-2"></i>Вложение:</dt>
+                            <dd class="col-sm-9">
+                                <a asp-action="DownloadAttachment" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="bi bi-download"></i> @Model.AttachmentFileName
+                                </a>
+                            </dd>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.AttachmentUrl))
+                        {
+                            <dt class="col-sm-3"><i class="bi bi-link-45deg me-2"></i>Ссылка:</dt>
+                            <dd class="col-sm-9">
+                                <a href="@Model.AttachmentUrl" target="_blank">@Model.AttachmentUrl</a>
+                            </dd>
+                        }
+
+                        @if (Model.Status == TaskStatus.Completed &&
+                                                (!string.IsNullOrEmpty(Model.CompletionComment) ||
+                                                !string.IsNullOrEmpty(Model.CompletionAttachmentFileName) ||
+                                                !string.IsNullOrEmpty(Model.CompletionUrl)))
+                        {
+                            <h5 class="mt-4">Отчёт о выполнении</h5>
+                            <hr />
+                            @if (!string.IsNullOrEmpty(Model.CompletionComment))
+                            {
+                                <dl class="row">
+                                    <dt class="col-sm-3">Комментарий:</dt>
+                                    <dd class="col-sm-9">@Model.CompletionComment</dd>
+                                </dl>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.CompletionAttachmentFileName))
+                            {
+                                <dl class="row">
+                                    <dt class="col-sm-3">Прикреплённый отчёт:</dt>
+                                    <dd class="col-sm-9">
+                                        <a asp-action="DownloadCompletionAttachment" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="bi bi-download"></i> @Model.CompletionAttachmentFileName
+                                        </a>
+                                    </dd>
+                                </dl>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.CompletionUrl))
+                            {
+                                <dl class="row">
+                                    <dt class="col-sm-3">Ссылка на результат:</dt>
+                                    <dd class="col-sm-9">
+                                        <a href="@Model.CompletionUrl" target="_blank">@Model.CompletionUrl</a>
+                                    </dd>
+                                </dl>
+                            }
+                            
+                        }
+                    </dl>
+                    @if (Model.Status == TaskStatus.Completed && Model.DueDate < DateTime.UtcNow)
+                    {
+                        <div class="alert alert-warning mt-2 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Задача выполнена после установленного срока.
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2 flex-wrap">
+                    @if (Model.AssignedToId == userId || Model.AssignedById == userId || isChairmanOrAdmin)
+                    {
+                        @if (Model.Status != TaskStatus.Completed && Model.Status != TaskStatus.Cancelled)
+                        {
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-primary dropdown-toggle rounded-pill" data-bs-toggle="dropdown">
+                                    <i class="bi bi-arrow-repeat"></i> Изменить статус
+                                </button>
+                                <ul class="dropdown-menu">
+                                    @if (Model.Status != TaskStatus.InProgress)
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@Model.Id" />
+                                                <input type="hidden" name="newStatus" value="@((int)TaskStatus.InProgress)" />
+                                                <button type="submit" class="dropdown-item">Взять в работу</button>
+                                            </form>
+                                        </li>
+                                    }
+                                    @if (Model.Status != TaskStatus.Completed)
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@Model.Id" />
+                                                <input type="hidden" name="newStatus" value="@((int)TaskStatus.Completed)" />
+                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#completeTaskModal">
+                                                    Отметить выполненной
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                    @if (isChairmanOrAdmin && Model.Status != TaskStatus.Cancelled)
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@Model.Id" />
+                                                <input type="hidden" name="newStatus" value="@((int)TaskStatus.Cancelled)" />
+                                                <button type="submit" class="dropdown-item text-danger">Отменить задачу</button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    }
+
+                    @if (isChairmanOrAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning rounded-pill">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    }
+
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-auto">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Модальное окно для выполнения задачи -->
+    <div class="modal fade" id="completeTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="CompleteTask" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Завершение задачи</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="CompletionComment" class="control-label">Комментарий о проделанной работе</label>
+                            <textarea name="Comment" class="form-control" rows="4" placeholder="Опишите, что сделано..."></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="control-label">Прикрепить файл с отчётом</label>
+                            <input type="file" name="AttachmentFile" class="form-control" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="control-label">Ссылка на результат (Google Docs, облако и т.п.)</label>
+                            <input type="url" name="ResultUrl" class="form-control" placeholder="https://..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-success">Завершить задачу</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetStatusDisplay(TaskStatus status) => status switch
+    {
+        TaskStatus.Pending => "Ожидает",
+        TaskStatus.InProgress => "В работе",
+        TaskStatus.Completed => "Выполнена",
+        TaskStatus.Overdue => "Просрочена",
+        TaskStatus.Cancelled => "Отменена",
+        _ => status.ToString()
+    };
+}

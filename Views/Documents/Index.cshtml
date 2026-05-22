@@ -1,0 +1,313 @@
+﻿@using System.Security.Claims
+@using PCKManagementSystem.Models
+@model IEnumerable<PCKManagementSystem.Models.Document>
+
+@{
+    ViewData["Title"] = "Управление документами";
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentUserId = userIdClaim != null ? int.Parse(userIdClaim) : 0;
+    var statusFilter = Context.Request.Query["statusFilter"].ToString();
+    var disciplineId = Context.Request.Query["disciplineId"].ToString();
+    var sortOrder = Context.Request.Query["sortOrder"].ToString();
+    var searchString = Context.Request.Query["searchString"].ToString();
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        @if (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК") || User.IsInRole("Преподаватель"))
+        {
+            <a asp-action="Create" class="btn btn-primary rounded-pill">
+                <i class="bi bi-plus-circle"></i> Загрузить документ
+            </a>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Фильтры и поиск -->
+    <div class="filters-section mb-4">
+        <form method="get" id="filterForm">
+            <!-- Чипсы для статусов -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Статус</label>
+                <div class="filter-chips">
+                    <a href="@Url.Action("Index", new { statusFilter = "", disciplineId, sortOrder, searchString })"
+                       class="chip @(string.IsNullOrEmpty(statusFilter) ? "active" : "")">Все</a>
+                    <a href="@Url.Action("Index", new { statusFilter = "Draft", disciplineId, sortOrder, searchString })"
+                       class="chip @(statusFilter == "Draft" ? "active" : "")">Черновики</a>
+                    <a href="@Url.Action("Index", new { statusFilter = "Review", disciplineId, sortOrder, searchString })"
+                       class="chip @(statusFilter == "Review" ? "active" : "")">На рассмотрении</a>
+                    <a href="@Url.Action("Index", new { statusFilter = "Approved", disciplineId, sortOrder, searchString })"
+                       class="chip @(statusFilter == "Approved" ? "active" : "")">Утверждённые</a>
+                    <a href="@Url.Action("Index", new { statusFilter = "Rejected", disciplineId, sortOrder, searchString })"
+                       class="chip @(statusFilter == "Rejected" ? "active" : "")">Отклонённые</a>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-end">
+                <!-- Поисковая строка -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Поиск</label>
+                    <div class="input-group">
+                        <input type="text" name="searchString" class="form-control" placeholder="Название, автор, дисциплина..." value="@searchString" />
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        @if (!string.IsNullOrEmpty(searchString))
+                        {
+                            <a href="@Url.Action("Index", new { statusFilter, disciplineId, sortOrder })" class="btn btn-outline-danger">
+                                <i class="bi bi-x"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Дисциплина -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Дисциплина</label>
+                    <select name="disciplineId" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все дисциплины</option>
+                        @foreach (var discipline in ViewBag.Disciplines)
+                        {
+                            <option value="@discipline.Value" selected="@(discipline.Value == disciplineId)">@discipline.Text</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Сброс фильтров -->
+                <div class="col-md-2">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100">Сбросить</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица с сортировкой -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParam"]"
+                                   asp-route-statusFilter="@statusFilter" asp-route-disciplineId="@disciplineId" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Название
+                                    @if (ViewData["CurrentSort"] == "" || ViewData["CurrentSort"] == null)
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "name_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Дисциплина</th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["AuthorSortParam"]"
+                                   asp-route-statusFilter="@statusFilter" asp-route-disciplineId="@disciplineId" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Автор
+                                    @if (ViewData["CurrentSort"]?.ToString() == "author")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "author_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["StatusSortParam"]"
+                                   asp-route-statusFilter="@statusFilter" asp-route-disciplineId="@disciplineId" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Статус
+                                    @if (ViewData["CurrentSort"]?.ToString() == "status")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "status_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["DateSortParam"]"
+                                   asp-route-statusFilter="@statusFilter" asp-route-disciplineId="@disciplineId" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Дата
+                                    @if (ViewData["CurrentSort"]?.ToString() == "date")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "date_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="file-icon me-2">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </div>
+                                        <div>
+                                            <strong>@item.Name</strong>
+                                            <div class="text-muted small">@item.DocumentType · v@(item.Version)</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@item.Discipline?.Name</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="avatar-circle me-2" title="@item.Author?.FullName">
+                                            @(string.IsNullOrEmpty(item.Author?.FullName) ? "?" : item.Author.FullName.Substring(0, 1).ToUpper())
+                                        </span>
+                                        @item.Author?.FullName
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(item.Status)">@GetStatusDisplay(item.Status)</span>
+                                </td>
+                                <td>
+                                    <div>@item.CreatedAt.ToString("dd.MM.yyyy")</div>
+                                    <small class="text-muted">@item.CreatedAt.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Просмотр">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (!string.IsNullOrEmpty(item.FilePath))
+                                        {
+                                            <a asp-action="Download" asp-route-id="@item.Id" class="btn btn-outline-success" title="Скачать">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        }
+                                        @if (item.Status == DocumentStatus.Draft && (item.AuthorId == currentUserId || User.IsInRole("Администратор")))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form asp-action="SendToReview" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-primary" title="Отправить на согласование">
+                                                    <i class="bi bi-send"></i>
+                                                </button>
+                                            </form>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
+                                        @if (item.Status == DocumentStatus.Review && (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК")))
+                                        {
+                                            <form asp-action="Approve" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-success" title="Утвердить">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal-@item.Id" title="Отклонить">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-files fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Документы не найдены</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна для отклонения (остаются без изменений) -->
+@foreach (var item in Model)
+{
+    <div class="modal fade" id="rejectModal-@item.Id" tabindex="-1" aria-labelledby="rejectModalLabel-@item.Id" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Reject" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="rejectModalLabel-@item.Id">Отклонение документа</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="comment-@item.Id" class="form-label">Укажите причину отклонения:</label>
+                            <textarea name="comment" id="comment-@item.Id" class="form-control" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-danger">Отклонить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}
+
+@functions {
+    private string GetStatusDisplay(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Draft => "Черновик",
+        DocumentStatus.Review => "На рассмотрении",
+        DocumentStatus.Approved => "Утвержден",
+        DocumentStatus.Rejected => "Отклонен",
+        _ => status.ToString()
+    };
+
+    private string GetStatusBadgeClass(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Draft => "bg-secondary",
+        DocumentStatus.Review => "bg-warning text-dark",
+        DocumentStatus.Approved => "bg-success",
+        DocumentStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

@@ -1,0 +1,254 @@
+﻿@model IEnumerable<PCKManagementSystem.Models.ViewModels.SavedReportViewModel>
+@{
+    ViewData["Title"] = "Отчеты";
+    var searchString = ViewData["CurrentFilter"] as string;
+    var currentReportType = ViewData["CurrentReportType"] as string;
+    var currentFormat = ViewData["CurrentFormat"] as string;
+    var startDate = ViewData["StartDate"] as string;
+    var endDate = ViewData["EndDate"] as string;
+    var sortOrder = ViewData["CurrentSort"] as string;
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        <a asp-action="Create" class="btn btn-primary rounded-pill">
+            <i class="bi bi-plus-circle"></i> Создать отчет
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Фильтры -->
+    <div class="filters-section mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <!-- Поиск по названию -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Поиск</label>
+                <div class="input-group">
+                    <input type="text" name="searchString" class="form-control"
+                           placeholder="Название отчета..." value="@searchString" />
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    @if (!string.IsNullOrEmpty(searchString))
+                    {
+                        <a href="@Url.Action("Index", new { reportType = currentReportType, format = currentFormat, startDate, endDate, sortOrder })"
+                           class="btn btn-outline-danger">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Тип отчета -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Тип отчета</label>
+                <select name="reportType" class="form-select modern-select" onchange="this.form.submit()">
+                    <option value="">Все типы</option>
+                    @foreach (var type in ViewBag.ReportTypes)
+                    {
+                        <option value="@type" selected="@(type == currentReportType)">@type</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Формат -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Формат</label>
+                <select name="format" class="form-select modern-select" onchange="this.form.submit()">
+                    <option value="">Все форматы</option>
+                    @foreach (var fmt in ViewBag.Formats)
+                    {
+                        <option value="@fmt" selected="@(fmt == currentFormat)">@fmt</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Дата начала -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">С даты</label>
+                <input type="date" name="startDate" class="form-control" value="@startDate" onchange="this.form.submit()" />
+            </div>
+
+            <!-- Дата конца -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">По дату</label>
+                <input type="date" name="endDate" class="form-control" value="@endDate" onchange="this.form.submit()" />
+            </div>
+
+            <!-- Кнопка сброса -->
+            <div class="col-auto">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-circle"></i> Сброс
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица отчетов -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["TitleSortParm"]"
+                                   asp-route-searchString="@searchString" asp-route-reportType="@currentReportType"
+                                   asp-route-format="@currentFormat" asp-route-startDate="@startDate" asp-route-endDate="@endDate">
+                                    Название
+                                    @if (sortOrder == "title")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                    else if (sortOrder == "title_desc")
+                                    {
+
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["TypeSortParm"]"
+                                   asp-route-searchString="@searchString" asp-route-reportType="@currentReportType"
+                                   asp-route-format="@currentFormat" asp-route-startDate="@startDate" asp-route-endDate="@endDate">
+                                    Тип
+                                    @if (sortOrder == "type")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                    else if (sortOrder == "type_desc")
+                                    {
+
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["DateSortParm"]"
+                                   asp-route-searchString="@searchString" asp-route-reportType="@currentReportType"
+                                   asp-route-format="@currentFormat" asp-route-startDate="@startDate" asp-route-endDate="@endDate">
+                                    Дата
+                                    @if (sortOrder == "date")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                    else if (sortOrder == "date_desc")
+                                    {
+
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["AuthorSortParm"]"
+                                   asp-route-searchString="@searchString" asp-route-reportType="@currentReportType"
+                                   asp-route-format="@currentFormat" asp-route-startDate="@startDate" asp-route-endDate="@endDate">
+                                    Создал
+                                    @if (sortOrder == "author")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                    else if (sortOrder == "author_desc")
+                                    {
+
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["FormatSortParm"]"
+                                   asp-route-searchString="@searchString" asp-route-reportType="@currentReportType"
+                                   asp-route-format="@currentFormat" asp-route-startDate="@startDate" asp-route-endDate="@endDate">
+                                    Формат
+                                    @if (sortOrder == "format")
+                                    {
+                                        <i class="bi bi-arrow-up"></i>
+                                    }
+                                    else if (sortOrder == "format_desc")
+                                    {
+
+                                        <i class="bi bi-arrow-down"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in Model)
+                        {
+                            <tr>
+                                <td><strong>@report.Title</strong></td>
+                                <td>@report.ReportType</td>
+                                <td>@report.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@report.CreatedBy</td>
+                                <td><span class="badge bg-info">@report.Format</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        @if (report.Format == "HTML")
+                                        {
+                                            <a asp-action="ViewReport" asp-route-id="@report.Id" class="btn btn-outline-info" title="Просмотреть">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="Details" asp-route-id="@report.Id" class="btn btn-outline-info" title="Информация">
+                                                <i class="bi bi-info-circle"></i>
+                                            </a>
+                                        }
+                                        @if (report.HasFile)
+                                        {
+                                            <a href="@report.FilePath" class="btn btn-outline-success" title="Скачать" download>
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        }
+                                        <form asp-action="Delete" asp-route-id="@report.Id" method="post" style="display:inline;"
+                                              onsubmit="return confirm('Удалить отчет?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-file-earmark-bar-graph fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Отчеты не найдены</p>
+                    <a asp-action="Create" class="btn btn-primary">Создать первый отчет</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

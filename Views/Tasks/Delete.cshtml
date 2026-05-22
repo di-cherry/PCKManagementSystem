@@ -1,0 +1,93 @@
+﻿@model PCKManagementSystem.Models.Tasks
+@{
+    ViewData["Title"] = "Удаление задачи";
+}
+
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-trash3 me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="alert alert-warning">
+        <h5>Вы уверены, что хотите удалить эту задачу?</h5>
+        <p class="mb-0">Это действие нельзя отменить.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Информация о задаче</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Название:</dt>
+                        <dd class="col-sm-9">@Model.Title</dd>
+
+                        <dt class="col-sm-3">Описание:</dt>
+                        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Description) ? "—" : Model.Description)</dd>
+
+                        <dt class="col-sm-3">Дисциплина:</dt>
+                        <dd class="col-sm-9">@Model.Discipline?.Name</dd>
+
+                        <dt class="col-sm-3">Исполнитель:</dt>
+                        <dd class="col-sm-9">@Model.AssignedTo?.FullName</dd>
+
+                        <dt class="col-sm-3">Постановщик:</dt>
+                        <dd class="col-sm-9">@Model.AssignedBy?.FullName</dd>
+
+                        <dt class="col-sm-3">Срок:</dt>
+                        <dd class="col-sm-9">@Model.DueDate.ToString("dd.MM.yyyy")</dd>
+
+                        <dt class="col-sm-3">Статус:</dt>
+                        <dd class="col-sm-9">
+                            @switch (Model.Status)
+                            {
+                                case PCKManagementSystem.Models.TaskStatus.Pending:
+                                    <span class="badge bg-secondary">Ожидает</span>
+                                    break;
+                                case PCKManagementSystem.Models.TaskStatus.InProgress:
+                                    <span class="badge bg-primary">В работе</span>
+                                    break;
+                                case PCKManagementSystem.Models.TaskStatus.Completed:
+                                    <span class="badge bg-success">Выполнено</span>
+                                    break;
+                                case PCKManagementSystem.Models.TaskStatus.Overdue:
+                                    <span class="badge bg-danger">Просрочено</span>
+                                    break;
+                                case PCKManagementSystem.Models.TaskStatus.Cancelled:
+                                    <span class="badge bg-dark">Отменена</span>
+                                    break;
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.AttachmentFileName))
+                        {
+                            <dt class="col-sm-3">Прикреплённый файл:</dt>
+                            <dd class="col-sm-9">
+                                <a href="@Model.AttachmentFilePath" target="_blank">@Model.AttachmentFileName</a>
+                                <span class="text-muted small">(будет удалён с сервера)</span>
+                            </dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.AttachmentUrl))
+                        {
+                            <dt class="col-sm-3">Ссылка:</dt>
+                            <dd class="col-sm-9">
+                                <a href="@Model.AttachmentUrl" target="_blank">@Model.AttachmentUrl</a>
+                            </dd>
+                        }
+                    </dl>
+
+                    <form asp-action="Delete" method="post" class="d-flex gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <i class="bi bi-trash me-2"></i>Подтвердить удаление
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

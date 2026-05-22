@@ -1,0 +1,143 @@
+﻿@model IEnumerable<PCKManagementSystem.Models.Specialty>
+@{
+    ViewData["Title"] = "Специальности";
+    var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");
+    var sortOrder = Context.Request.Query["sortOrder"].ToString();
+    var searchString = Context.Request.Query["searchString"].ToString();
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        @if (isChairmanOrAdmin)
+        {
+            <div class="d-flex gap-2">
+                <a asp-action="Create" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-plus-circle"></i> Добавить специальность
+                </a>
+                <div class="dropdown d-inline-block ms-2">
+                    <button class="btn btn-success rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Экспорт
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" asp-action="ExportToExcel">
+                                <i class="bi bi-file-earmark-excel"></i> Все специальности
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-action="ExportToExcel" asp-route-onlyWithDisciplines="true">
+                                <i class="bi bi-file-earmark-excel"></i> Только с дисциплинами
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Фильтры -->
+    <div class="filters-section mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Поиск</label>
+                <div class="input-group">
+                    <input type="text" name="searchString" class="form-control"
+                           placeholder="Код или название..." value="@ViewData["CurrentFilter"]" />
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
+                    {
+                        <a href="@Url.Action("Index", new { sortOrder = ViewData["CurrentSort"] })"
+                           class="btn btn-outline-danger">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["CodeSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]">Код</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]">Название</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["DisciplinesSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]">Дисциплин</a>
+                            </th>
+                            <th>Действия</th>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.Code</strong></td>
+                                <td>@item.Name</td>
+                                <td>@item.Disciplines?.Count()</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Просмотр">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (isChairmanOrAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-mortarboard fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Специальности не найдены</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(() => $('.alert').fadeOut('slow'), 5000);
+    </script>
+}

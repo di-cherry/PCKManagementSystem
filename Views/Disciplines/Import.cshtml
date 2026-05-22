@@ -1,0 +1,160 @@
+﻿@{
+    ViewData["Title"] = "Импорт дисциплин";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form id="importForm" asp-action="Import" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-semibold">Файл Excel (.xlsx)</label>
+                            <input type="file" id="excelFile" name="file" class="form-control" accept=".xlsx" required />
+                            <small class="text-muted">
+                                Формат: колонка A — код дисциплины, колонка B — название, колонка C — код специальности.
+                                Первая строка — заголовки, не обрабатываются.
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" id="previewBtn" class="btn btn-info rounded-pill px-4">
+                                <i class="bi bi-eye me-2"></i> Предварительный просмотр
+                            </button>
+                            <button type="submit" id="importBtn" class="btn btn-primary rounded-pill px-4" disabled>
+                                <i class="bi bi-upload me-2"></i> Импортировать
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок предпросмотра -->
+    <div id="previewContainer" class="mt-4" style="display: none;">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-table me-2"></i>Предварительный просмотр</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0" id="previewTable">
+                        <thead>
+                            <tr>
+                                <th>Строка</th>
+                                <th>Код</th>
+                                <th>Название</th>
+                                <th>Специальность (код)</th>
+                                <th>Специальность</th>
+                                <th>Статус</th>
+                                <th>Сообщение</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                            <!-- Данные будут загружены через AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div id="validationSummary" class="small"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#previewBtn').click(function() {
+                var fileInput = document.getElementById('excelFile');
+                if (fileInput.files.length === 0) {
+                    alert('Пожалуйста, выберите файл');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                $.ajax({
+                    url: '@Url.Action("PreviewImport", "Disciplines")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            renderPreviewTable(response.data);
+                            $('#previewContainer').show();
+                            $('#importBtn').prop('disabled', false);
+                        } else {
+                            alert(response.message);
+                            $('#previewContainer').hide();
+                            $('#importBtn').prop('disabled', true);
+                        }
+                    },
+                    error: function() {
+                        alert('Ошибка при загрузке файла');
+                        $('#previewContainer').hide();
+                        $('#importBtn').prop('disabled', true);
+                    }
+                });
+            });
+
+            function renderPreviewTable(data) {
+                var tbody = $('#previewTableBody');
+                tbody.empty();
+                var validCount = 0;
+                var invalidCount = 0;
+
+                $.each(data, function(index, item) {
+                    var rowClass = item.isValid ? '' : 'table-danger';
+                    var statusBadge = item.isValid ?
+                        (item.isNew ? '<span class="badge bg-success">Новая</span>' : '<span class="badge bg-warning text-dark">Обновление</span>') :
+                        '<span class="badge bg-danger">Ошибка</span>';
+
+                    var row = '<tr class="' + rowClass + '">' +
+                        '<td>' + item.rowNumber + '</td>' +
+                        '<td><strong>' + escapeHtml(item.code) + '</strong></td>' +
+                        '<td>' + escapeHtml(item.name) + '</td>' +
+                        '<td>' + escapeHtml(item.specialtyCode) + '</td>' +
+                        '<td>' + escapeHtml(item.specialtyName || '—') + '</td>' +
+                        '<td>' + statusBadge + '</td>' +
+                        '<td>' + escapeHtml(item.errorMessage || '') + '</td>' +
+                        '</tr>';
+                    tbody.append(row);
+
+                    if (item.isValid) validCount++;
+                    else invalidCount++;
+                });
+
+                var summary = $('#validationSummary');
+                if (invalidCount > 0) {
+                    summary.html('<div class="alert alert-danger mb-0">Найдено ошибок: ' + invalidCount + '. Исправьте их и повторите загрузку.</div>');
+                    $('#importBtn').prop('disabled', true);
+                } else {
+                    summary.html('<div class="alert alert-success mb-0">Все ' + validCount + ' записей готовы к импорту.</div>');
+                    $('#importBtn').prop('disabled', false);
+                }
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+        });
+    </script>
+}

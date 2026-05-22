@@ -1,0 +1,289 @@
+﻿@model PCKManagementSystem.Models.ViewModels.DocumentsReportViewModel
+@{
+    var colors = new[] { "primary", "success", "warning", "danger", "info" };
+    var colorIndex = 0;
+}
+
+<div class="report-container">
+    <div class="text-center mb-4">
+        <h2>@Model.Title</h2>
+        <p class="text-muted">Сгенерирован: @Model.GeneratedAt.ToString("dd.MM.yyyy HH:mm")</p>
+        @if (Model.Parameters.HasParameters)
+        {
+            <div class="alert alert-info">
+                <strong>Параметры:</strong>
+                @if (!string.IsNullOrEmpty(Model.Parameters.Period))
+                {
+                    <span>Период: @Model.Parameters.Period</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Parameters.Teacher))
+                {
+                    <span>Преподаватель: @Model.Parameters.Teacher</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Parameters.Discipline))
+                {
+                    <span>Дисциплина: @Model.Parameters.Discipline</span>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Статистика по статусам -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalDocuments</h3>
+                    <p class="mb-0">Всего документов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.ApprovedDocuments</h3>
+                    <p class="mb-0">Утверждено</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.ReviewDocuments</h3>
+                    <p class="mb-0">На рассмотрении</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.RejectedDocuments</h3>
+                    <p class="mb-0">Отклонено</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* <!-- Диаграмма статусов -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Распределение по статусам</h6>
+                </div>
+                <div class="card-body">
+                    @foreach (var item in Model.DocumentsByStatus)
+                    {
+                        var percent = Model.TotalDocuments > 0 ? (item.Value * 100) / Model.TotalDocuments : 0;
+                        var color = colors[colorIndex % colors.Length];
+                        colorIndex++;
+
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>@item.Key</span>
+                                <span>@item.Value (@percent%)</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-@color" role="progressbar" style="width: @percent%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div> *@
+
+    <!-- Диаграмма статусов -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <canvas id="documentsStatusChart" width="400" height="200"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="documentsByDisciplineChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Диаграмма по статусам
+        const statusCtx = document.getElementById('documentsStatusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.DocumentsByStatus.Keys)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.DocumentsByStatus.Values)),
+                    backgroundColor: ['#667eea', '#48bb78', '#f56565', '#ed8936']
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Распределение по статусам' }
+                }
+            }
+        });
+
+        // Диаграмма по дисциплинам (топ-5)
+        const disciplineCtx = document.getElementById('documentsByDisciplineChart').getContext('2d');
+        const topDisciplines = @Html.Raw(Json.Serialize(Model.DocumentsByDiscipline.OrderByDescending(d => d.TotalDocuments).Take(5)));
+        new Chart(disciplineCtx, {
+            type: 'bar',
+            data: {
+                labels: topDisciplines.map(d => d.DisciplineCode),
+                datasets: [{
+                    label: 'Количество документов',
+                    data: topDisciplines.map(d => d.TotalDocuments),
+                    backgroundColor: '#667eea'
+                }]
+            },
+            options: {
+                plugins: {
+                    title: { display: true, text: 'Топ-5 дисциплин по количеству документов' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Распределение по статусам</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="documentsStatusChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Статистика</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td>Всего документов:</td><td class="text-end"><strong>@Model.TotalDocuments</strong></td></tr>
+                                <tr><td>Черновики:</td><td class="text-end"><strong>@Model.DraftDocuments</strong></td></tr>
+                                <tr><td>На рассмотрении:</td><td class="text-end"><strong>@Model.ReviewDocuments</strong></td></tr>
+                                <tr><td>Утверждены:</td><td class="text-end"><strong>@Model.ApprovedDocuments</strong></td></tr>
+                                <tr><td>Отклонены:</td><td class="text-end"><strong>@Model.RejectedDocuments</strong></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            const ctx = document.getElementById('documentsStatusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Черновики', 'На рассмотрении', 'Утверждены', 'Отклонены'],
+                    datasets: [{
+                        data: [
+                            @Model.DraftDocuments,
+                            @Model.ReviewDocuments,
+                            @Model.ApprovedDocuments,
+                            @Model.RejectedDocuments
+                        ],
+                        backgroundColor: ['#6c757d', '#ffc107', '#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} (${((ctx.raw / @Model.TotalDocuments) * 100).toFixed(1)}%)` } }
+                    }
+                }
+            });
+        </script>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Топ дисциплин по документам</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Дисциплина</th>
+                                <th>Всего</th>
+                                <th>Утверждено</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.DocumentsByDiscipline.OrderByDescending(d => d.TotalDocuments).Take(5))
+                            {
+                                <tr>
+                                    <td>@item.DisciplineCode</td>
+                                    <td>@item.TotalDocuments</td>
+                                    <td>@item.ApprovedDocuments</td>
+                                    <td>@item.ApprovalRate%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние документы -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Последние документы</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Тип</th>
+                        <th>Автор</th>
+                        <th>Дисциплина</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RecentDocuments)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.DocumentType</td>
+                            <td>@item.AuthorName</td>
+                            <td>@item.DisciplineName</td>
+                            <td>@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                            <td>@item.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .report-container {
+        font-size: 14px;
+    }
+
+    .progress {
+        height: 20px;
+    }
+
+    @@media print {
+        .btn, .card-header {
+            background-color: #f8f9fa !important;
+            color: black !important;
+        }
+    }
+</style>

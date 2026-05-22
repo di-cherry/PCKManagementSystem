@@ -1,0 +1,247 @@
+﻿@model PCKManagementSystem.Models.ViewModels.DashboardStatisticsViewModel
+@{
+    ViewData["Title"] = "Панель администратора";
+    var colors = new[] { "primary", "success", "warning", "danger", "info", "secondary" };
+    var colorIndex = 0;
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Статистика пользователей в современных карточках -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card-modern">
+            <div class="stat-icon-modern" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.TotalUsers</h3>
+                <p>Всего пользователей</p>
+                <small class="text-muted">Активных: @Model.ActiveUsers</small>
+            </div>
+        </div>
+        <div class="stat-card-modern">
+            <div class="stat-icon-modern" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <i class="bi bi-person-workspace"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.TeachersCount</h3>
+                <p>Преподаватели</p>
+            </div>
+        </div>
+        <div class="stat-card-modern">
+            <div class="stat-icon-modern" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.ChairmenCount</h3>
+                <p>Председатели</p>
+            </div>
+        </div>
+        <div class="stat-card-modern">
+            <div class="stat-icon-modern" style="background: linear-gradient(135deg, #96fbc4 0%, #f9f586 100%);">
+                <i class="bi bi-shield-lock"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.AdminsCount</h3>
+                <p>Администраторы</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика документов (компактная) -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-files fs-1 text-primary"></i>
+                <h3>@Model.TotalDocuments</h3>
+                <p class="text-muted mb-0">Всего документов</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-pencil fs-1 text-secondary"></i>
+                <h3>@Model.DraftDocuments</h3>
+                <p class="text-muted mb-0">Черновики</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-hourglass-split fs-1 text-warning"></i>
+                <h3>@Model.ReviewDocuments</h3>
+                <p class="text-muted mb-0">На рассмотрении</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-check-circle fs-1 text-success"></i>
+                <h3>@Model.ApprovedDocuments</h3>
+                <p class="text-muted mb-0">Утверждено</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика задач -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-list-task fs-1 text-primary"></i>
+                <h3>@Model.TotalTasks</h3>
+                <p class="text-muted mb-0">Всего задач</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-clock fs-1 text-secondary"></i>
+                <h3>@Model.PendingTasks</h3>
+                <p class="text-muted mb-0">Ожидают</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-check2-all fs-1 text-success"></i>
+                <h3>@Model.CompletedTasks</h3>
+                <p class="text-muted mb-0">Выполнено</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 rounded-4 text-center p-3">
+                <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                <h3>@Model.OverdueTasks</h3>
+                <p class="text-muted mb-0">Просрочено</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Две колонки: активные пользователи и последние действия -->
+    <div class="row">
+        <!-- Самые активные пользователи (таблица в современном стиле) -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-star me-2"></i>Самые активные пользователи</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-modern mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Пользователь</th>
+                                    <th>Документов</th>
+                                    <th>Задач (поставил)</th>
+                                    <th>Задач (выполнил)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.MostActiveUsers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="avatar-circle me-2">@(string.IsNullOrEmpty(user.UserName) ? "?" : user.UserName.Substring(0, 1).ToUpper())</span>
+                                                <div>
+                                                    <strong>@user.UserName</strong><br />
+                                                    <small class="text-muted">@user.UserEmail</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@user.DocumentsCreated</td>
+                                        <td>@user.TasksAssigned</td>
+                                        <td>@user.TasksCompleted</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (!Model.MostActiveUsers.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="text-muted mb-0">Нет данных</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние действия (лента событий с иконками) -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Последние действия</h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <div class="list-group list-group-flush">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="list-group-item border-0 d-flex align-items-start gap-3">
+                                <span class="badge rounded-circle p-2 bg-@activity.Color">
+                                    <i class="bi @activity.Icon"></i>
+                                </span>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>@activity.Action</strong>
+                                        <small class="text-muted">@activity.TimeAgo</small>
+                                    </div>
+                                    <p class="mb-0 text-muted small">@activity.Details</p>
+                                    <small class="text-muted">@activity.UserName</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (!Model.RecentActivities.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock-history fs-1 text-muted"></i>
+                            <p class="text-muted mb-0">Нет действий</p>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer text-end">
+                    <a asp-action="AuditLog" class="btn btn-sm btn-outline-info rounded-pill">
+                        <i class="bi bi-list"></i> Все действия
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия (кнопки) -->
+    <div class="card shadow rounded-4">
+        <div class="card-header bg-success text-white rounded-top-4">
+            <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Быстрые действия</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="CreateUser" class="action-btn">
+                    <i class="bi bi-person-plus"></i> Добавить пользователя
+                </a>
+                <a asp-action="CreateAnnouncement" class="action-btn">
+                    <i class="bi bi-megaphone"></i> Создать объявление
+                </a>
+                <a asp-action="AuditLog" class="action-btn">
+                    <i class="bi bi-journal-text"></i> Журнал аудита
+                </a>
+                <a asp-controller="Reports" asp-action="Create" class="action-btn">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Создать отчет
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

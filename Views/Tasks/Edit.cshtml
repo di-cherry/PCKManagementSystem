@@ -1,0 +1,160 @@
+﻿@using TaskStatus = PCKManagementSystem.Models.TaskStatus
+@model PCKManagementSystem.Models.ViewModels.TasksEditViewModel
+@{
+    ViewData["Title"] = "Редактирование задачи";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Edit" enctype="multipart/form-data" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="control-label fw-semibold required-field">Название задачи</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-card-heading"></i></span>
+                                <input asp-for="Title" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="control-label fw-semibold required-field">Описание</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-text-paragraph"></i></span>
+                                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DisciplineId" class="control-label fw-semibold required-field">Дисциплина</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                                        <select asp-for="DisciplineId" class="form-control" asp-items="Model.Disciplines">
+                                            <option value="">-- Выберите дисциплину --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="DisciplineId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DueDate" class="control-label fw-semibold">Срок выполнения</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
+                                        <input asp-for="DueDate" class="form-control" type="date" />
+                                    </div>
+                                    <span asp-validation-for="DueDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AssignedToId" class="control-label fw-semibold required-field">Исполнитель</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                        <select asp-for="AssignedToId" class="form-control" asp-items="Model.Teachers">
+                                            <option value="">-- Выберите исполнителя --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="AssignedToId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="col-md-8">
+                                    @if (!string.IsNullOrEmpty(Model.ExistingAttachmentFileName))
+                                    {
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+                                            <span>@Model.ExistingAttachmentFileName</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeFile()" title="Удалить файл">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <input type="hidden" name="RemoveAttachmentFile" id="RemoveAttachmentFile" value="false" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-0">Файл не прикреплён</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="NewAttachmentFile" class="control-label fw-semibold">Заменить или добавить файл</label>
+                                    <input asp-for="NewAttachmentFile" class="form-control" type="file" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="AttachmentUrl" class="control-label fw-semibold">Ссылка на ресурс</label>
+                            <input asp-for="AttachmentUrl" class="form-control" placeholder="https://..." />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Status" class="control-label fw-semibold">Статус</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-flag"></i></span>
+                                        <select asp-for="Status" class="form-control">
+                                            <option value="@((int)TaskStatus.Pending)">Ожидает</option>
+                                            <option value="@((int)TaskStatus.InProgress)">В работе</option>
+                                            <option value="@((int)TaskStatus.Completed)">Выполнено</option>
+                                            <option value="@((int)TaskStatus.Overdue)">Просрочено</option>
+                                            <option value="@((int)TaskStatus.Cancelled)">Отменена</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Сохранить
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        
+    }
+    <script>
+        function removeFile() {
+            if (confirm('Удалить прикреплённый файл? Это действие нельзя отменить.')) {
+                document.getElementById('RemoveAttachmentFile').value = 'true';
+                // Опционально: скрыть блок с файлом и показать сообщение, что файл будет удалён
+                const fileBlock = document.querySelector('.d-flex.align-items-center.gap-3');
+                if (fileBlock) fileBlock.style.display = 'none';
+                // Можно также отобразить текст "Файл будет удалён при сохранении"
+                const parent = fileBlock.parentElement;
+                const infoMsg = document.createElement('p');
+                infoMsg.className = 'text-muted mb-0';
+                infoMsg.innerText = 'Файл будет удалён после сохранения задачи.';
+                parent.appendChild(infoMsg);
+            }
+        }
+    </script>
+}

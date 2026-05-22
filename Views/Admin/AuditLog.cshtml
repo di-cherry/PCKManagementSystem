@@ -1,0 +1,155 @@
+﻿@model IEnumerable<PCKManagementSystem.Models.ViewModels.AuditLogViewModel>
+@using PCKManagementSystem.Models.ViewModels
+@{
+    ViewData["Title"] = "Журнал аудита";
+    var filter = ViewBag.Filter as AuditLogFilterViewModel ?? new AuditLogFilterViewModel();
+    var actionType = Context.Request.Query["ActionType"];
+    var entityType = Context.Request.Query["EntityType"];
+    var userId = Context.Request.Query["UserId"];
+    var startDate = Context.Request.Query["StartDate"];
+    var endDate = Context.Request.Query["EndDate"];
+    var searchTerm = Context.Request.Query["SearchTerm"];
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">@ViewData["Title"]</h1>
+        <a asp-action="ExportAuditLogToExcel"
+           asp-route-actionType="@actionType"
+           asp-route-entityType="@entityType"
+           asp-route-userId="@userId"
+           asp-route-startDate="@startDate"
+           asp-route-endDate="@endDate"
+           asp-route-searchTerm="@searchTerm"
+           class="btn btn-success rounded-pill">
+            <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
+        </a>
+    </div>
+
+    <div class="filters-section mb-4 rounded-4">
+        <form method="get" class="row g-3" id="filterForm">
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-tag me-1"></i>Тип действия</label>
+                <select name="ActionType" class="form-select" onchange="this.form.submit()">
+                    <option value="">Все действия</option>
+                    @foreach (var item in filter.ActionTypes ?? new List<SelectListItem>())
+                    {
+                        <option value="@item.Value" selected="@(item.Value == actionType)">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-database me-1"></i>Тип сущности</label>
+                <select name="EntityType" class="form-select" onchange="this.form.submit()">
+                    <option value="">Все сущности</option>
+                    @foreach (var item in filter.EntityTypes ?? new List<SelectListItem>())
+                    {
+                        <option value="@item.Value" selected="@(item.Value == entityType)">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-person me-1"></i>Пользователь</label>
+                <select name="UserId" class="form-select" onchange="this.form.submit()">
+                    <option value="">Все пользователи</option>
+                    @foreach (var item in filter.Users ?? new List<SelectListItem>())
+                    {
+                        <option value="@item.Value" selected="@(item.Value == userId)">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Начальная дата</label>
+                <input type="date" name="StartDate" class="form-control" value="@startDate" onchange="this.form.submit()" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Конечная дата</label>
+                <input type="date" name="EndDate" class="form-control" value="@endDate" onchange="this.form.submit()" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Поиск</label>
+                <div class="input-group">
+                    <input type="text" name="SearchTerm" class="form-control" value="@searchTerm" placeholder="Поиск..." />
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a href="@Url.Action("AuditLog")" class="btn btn-outline-danger">
+                        <i class="bi bi-x"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-clock"></i> Время</th>
+                            <th><i class="bi bi-person"></i> Пользователь</th>
+                            <th><i class="bi bi-tag"></i> Действие</th>
+                            <th><i class="bi bi-chat-text"></i> Описание</th>
+                            <th><i class="bi bi-database"></i> Сущность</th>
+                            <th><i class="bi bi-wifi"></i> IP</th>
+                            <th></th>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><span title="@item.ActionDate.ToString("dd.MM.yyyy HH:mm:ss")">@item.TimeAgo</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="avatar-circle me-2">@(string.IsNullOrEmpty(item.UserFullName) ? "?" : item.UserFullName.Substring(0, 1).ToUpper())</span>
+                                        <div>
+                                            <strong>@(string.IsNullOrEmpty(item.UserFullName) ? item.UserEmail : item.UserFullName)</strong>
+                                            <div class="text-muted small">@item.UserEmail</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">@item.ActionType</span></td>
+                                <td>@item.ActionDescription</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.EntityType))
+                                    {
+                                        <span class="badge bg-secondary">@item.EntityType</span>
+                                        if (item.EntityId.HasValue)
+                                        {
+                                            <span> #@item.EntityId</span>
+                                        }
+                                    }
+                                </td>
+                                <td><small>@item.IpAddress</small></td>
+                                <td>
+                                    <a asp-action="AuditLogDetails" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info rounded-pill" title="Подробнее">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-text fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Записи не найдены</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            input.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+    </script>
+}

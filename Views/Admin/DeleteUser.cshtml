@@ -1,0 +1,80 @@
+﻿@model PCKManagementSystem.Models.User
+
+@{
+    ViewData["Title"] = "Удаление пользователя";
+    var hasRelatedData = ViewBag.HasRelatedData == true;
+}
+
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-trash3 me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="alert alert-warning">
+        <h5>Вы уверены, что хотите удалить этого пользователя?</h5>
+        @if (hasRelatedData)
+        {
+            <p class="text-danger mb-0 mt-2">
+                <strong>Внимание!</strong> У пользователя есть связанные данные:
+                @if (ViewBag.DocumentsCount > 0)
+                {
+                    <span>📄 Документов: @ViewBag.DocumentsCount;</span>
+                }
+                @if (ViewBag.WorkloadCount > 0)
+                {
+                    <span>📊 Нагрузка: @ViewBag.WorkloadCount записей;</span>
+                }
+                @if (ViewBag.TasksCount > 0)
+                {
+                    <span>✅ Задач: @ViewBag.TasksCount;</span>
+                }
+                Удаление невозможно.
+            </p>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4"><i class="bi bi-person me-2"></i>ФИО:</dt>
+                        <dd class="col-sm-8">@Model.FullName</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-envelope me-2"></i>Email:</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-calendar me-2"></i>Дата регистрации:</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("dd.MM.yyyy")</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-flag me-2"></i>Статус:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? "Активен" : "Заблокирован")
+                            </span>
+                        </dd>
+                    </dl>
+
+                    @if (hasRelatedData)
+                    {
+                        <a asp-action="Users" class="btn btn-secondary rounded-pill">
+                            <i class="bi bi-x-circle me-2"></i>Назад к списку
+                        </a>
+                    }
+                    else
+                    {
+                        <form asp-action="DeleteUser" method="post">
+                            <input type="hidden" asp-for="Id" />
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                    <i class="bi bi-trash me-2"></i>Подтвердить удаление
+                                </button>
+                                <a asp-action="Users" class="btn btn-secondary rounded-pill px-4">
+                                    <i class="bi bi-x-circle me-2"></i>Отмена
+                                </a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,260 @@
+﻿@model PCKManagementSystem.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Мой профиль";
+    var userInitials = string.IsNullOrEmpty(Model.FullName)
+        ? Model.Email.Substring(0, Math.Min(2, Model.Email.Length)).ToUpper()
+        : string.Concat(Model.FullName.Split(' ').Select(s => s.Length > 0 ? s[0].ToString() : ""));
+}
+
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-person-circle me-2"></i>@ViewData["Title"]</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Шапка профиля -->
+    <div class="profile-header animate__animated animate__fadeIn">
+        <div class="profile-cover">
+            <div class="profile-avatar">
+                <span>@userInitials</span>
+            </div>
+        </div>
+        <div class="profile-info">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2>@(string.IsNullOrEmpty(Model.FullName) ? "Не указано" : Model.FullName)</h2>
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-envelope me-2"></i> @Model.Email
+                    </p>
+                    <div class="mb-3">
+                        @foreach (var role in Model.Roles)
+                        {
+                            <span class="badge bg-info me-1">@role</span>
+                        }
+                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger") ms-2">
+                            @(Model.IsActive ? "Активен" : "Заблокирован")
+                        </span>
+                    </div>
+                    <p class="text-muted small">
+                        <i class="bi bi-calendar me-2"></i> Зарегистрирован: @Model.CreatedAt.ToString("dd.MM.yyyy")
+                        @if (Model.LastLoginAt.HasValue)
+                        {
+                            <span class="ms-3"><i class="bi bi-clock me-2"></i> Последний вход: @Model.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                        }
+                    </p>
+                </div>
+                <a asp-action="Edit" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-pencil me-2"></i> Редактировать профиль
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика активности -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="bi bi-files text-white"></i>
+                </div>
+                <h3>@Model.DocumentsCreated</h3>
+                <p class="text-muted">Документов создано</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="bi bi-check-circle text-white"></i>
+                </div>
+                <h3>@Model.DocumentsApproved</h3>
+                <p class="text-muted">Документов утверждено</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="bi bi-list-task text-white"></i>
+                </div>
+                <h3>@Model.TasksAssigned</h3>
+                <p class="text-muted">Задач поставлено</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="bi bi-check2-square text-white"></i>
+                </div>
+                <h3>@Model.TasksCompleted</h3>
+                <p class="text-muted">Задач выполнено</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дополнительная статистика -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Дополнительная информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1"><strong>Просроченных задач:</strong></p>
+                            <p class="mb-1"><strong>Часов учебной нагрузки:</strong></p>
+                            <p class="mb-1"><strong>Всего действий:</strong></p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1">
+                                <span class="badge @(Model.TasksOverdue > 0 ? "bg-danger" : "bg-success")">@Model.TasksOverdue</span>
+                            </p>
+                            <p class="mb-1"><span class="badge bg-info">@Model.WorkloadHours</span></p>
+                            <p class="mb-1"><span class="badge bg-primary">@(Model.DocumentsCreated + Model.TasksAssigned + Model.TasksCompleted)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield me-2"></i>Безопасность</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="bi bi-shield-check text-success me-2"></i> Пароль: <strong>••••••••</strong></p>
+                    <button type="button" class="btn btn-warning rounded-pill" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="bi bi-key me-2"></i> Сменить пароль
+                    </button>
+                    <hr />
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-info-circle me-2"></i> Для смены email обратитесь к администратору
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние действия -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Последние действия</h5>
+                    <a asp-action="Activity" class="btn btn-sm btn-light rounded-pill">
+                        Все действия <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentActivities.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var activity in Model.RecentActivities)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div>
+                                            <i class="bi @activity.IconClass me-2"></i>
+                                            <strong>@activity.ActionType</strong> - @activity.Description
+                                            @if (!string.IsNullOrEmpty(activity.EntityType))
+                                            {
+                                                <span class="badge bg-secondary ms-2">@activity.EntityType</span>
+                                            }
+                                        </div>
+                                        <small class="text-muted">@activity.TimeAgo</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock-history fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Нет записей о действиях</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно смены пароля (без изменений) -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark">Смена пароля</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Текущий пароль</label>
+                        <input type="password" name="CurrentPassword" class="form-control" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Новый пароль</label>
+                        <input type="password" name="NewPassword" class="form-control" required minlength="4" />
+                        <small class="text-muted">Минимум 4 символа</small>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Подтверждение пароля</label>
+                        <input type="password" name="ConfirmPassword" class="form-control" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning rounded-pill" id="changePasswordBtn">Изменить пароль</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#changePasswordBtn').click(function() {
+                var formData = $('#changePasswordForm').serialize();
+
+                $.ajax({
+                    url: '@Url.Action("ChangePassword", "Profile")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#changePasswordModal').modal('hide');
+                            $('#changePasswordForm')[0].reset();
+
+                            var alertHtml = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                response.message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                '</div>';
+                            $('.container').prepend(alertHtml);
+
+                            setTimeout(function() {
+                                $('.alert').fadeOut('slow');
+                            }, 5000);
+                        } else {
+                            alert('Ошибка: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Произошла ошибка при смене пароля');
+                    }
+                });
+            });
+        });
+
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

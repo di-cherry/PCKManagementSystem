@@ -1,0 +1,209 @@
+﻿@model IEnumerable<PCKManagementSystem.Models.ViewModels.WorkloadViewModel>
+@using PCKManagementSystem.Models.ViewModels
+@{
+    ViewData["Title"] = ViewBag.IsMyLoad == true ? "Моя учебная нагрузка" : "Учебная нагрузка";
+    var filterModel = ViewBag.FilterModel as WorkloadFilterViewModel;
+    var isChairmanOrAdmin = ViewBag.IsChairmanOrAdmin == true;
+    var sortOrder = Context.Request.Query["sortOrder"].ToString();
+    var searchString = Context.Request.Query["searchString"].ToString();
+    var academicYear = Context.Request.Query["academicYear"].ToString();
+    var semester = Context.Request.Query["semester"].ToString();
+    var teacherId = Context.Request.Query["teacherId"].ToString();
+    var disciplineId = Context.Request.Query["disciplineId"].ToString();
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        @if (isChairmanOrAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary rounded-pill">
+                <i class="bi bi-plus-circle"></i> Добавить нагрузку
+            </a>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (isChairmanOrAdmin)
+    {
+        <!-- Фильтры -->
+        <div class="filters-section mb-4">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Поиск</label>
+                    <div class="input-group">
+                        <input type="text" name="searchString" class="form-control" placeholder="Преподаватель, дисциплина..." value="@ViewData["CurrentFilter"]" />
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
+                        {
+                            <a href="@Url.Action("Index", new { academicYear = filterModel?.AcademicYear, semester = filterModel?.Semester, teacherId = filterModel?.TeacherId, disciplineId = filterModel?.DisciplineId, sortOrder = ViewData["CurrentSort"] })" class="btn btn-outline-danger">
+                                <i class="bi bi-x"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Учебный год</label>
+                    <select name="academicYear" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все годы</option>
+                        @foreach (var year in filterModel?.AcademicYears ?? new List<SelectListItem>())
+                        {
+                            <option value="@year.Value" selected="@(year.Value == academicYear)">@year.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label fw-semibold">Семестр</label>
+                    <select name="semester" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все</option>
+                        <option value="1" selected="@(semester == "1")">1</option>
+                        <option value="2" selected="@(semester == "2")">2</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Преподаватель</label>
+                    <select name="teacherId" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все преподаватели</option>
+                        @foreach (var teacher in filterModel?.Teachers ?? new List<SelectListItem>())
+                        {
+                            <option value="@teacher.Value" selected="@(teacher.Value == teacherId)">@teacher.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Дисциплина</label>
+                    <select name="disciplineId" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все дисциплины</option>
+                        @foreach (var discipline in filterModel?.Disciplines ?? new List<SelectListItem>())
+                        {
+                            <option value="@discipline.Value" selected="@(discipline.Value == disciplineId)">@discipline.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">Сброс</a>
+                </div>
+            </form>
+        </div>
+    }
+
+    <!-- Таблица нагрузки -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["TeacherSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Преподаватель</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["DisciplineSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Дисциплина</a>
+                            </th>
+                            <th>Курс</th>                 
+                            <th>Форма обучения</th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["YearSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Учебный год</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["SemesterSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Сем.</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["HoursSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Часы</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["LoadTypeSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" asp-route-academicYear="@filterModel?.AcademicYear" asp-route-semester="@filterModel?.Semester" asp-route-teacherId="@filterModel?.TeacherId" asp-route-disciplineId="@filterModel?.DisciplineId">Тип</a>
+                            </th>
+                            <th>Групп</th>
+                            <th>Комментарий</th>
+                            @if (isChairmanOrAdmin)
+                            {
+                                <th>Действия</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="avatar-circle me-2">@(string.IsNullOrEmpty(item.TeacherName) ? "?" : item.TeacherName.Substring(0, 1).ToUpper())</span>
+                                        @item.TeacherName
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>@item.DisciplineCode</strong>
+                                    <div class="small text-muted">@item.DisciplineName</div>
+                                </td>
+                                <td>@(item.Course.HasValue ? $"{item.Course} курс" : "—")</td>       
+                                <td>@(item.StudyForm ?? "—")</td>
+                                <td>@item.AcademicYear</td>
+                                <td>@item.Semester</td>
+                                <td><span class="badge bg-primary">@item.TotalHours ч.</span></td>
+                                <td>@item.LoadType</td>
+                                <td>@item.GroupsCount</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.Comments))
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-chat-dots text-muted"></i>
+                                            <span class="small">@(item.Comments.Length > 50 ? item.Comments.Substring(0, 50) + "..." : item.Comments)</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                @if (isChairmanOrAdmin)
+                                {
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-bar-chart fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Нагрузка не найдена</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(() => $('.alert').fadeOut('slow'), 5000);
+    </script>
+}

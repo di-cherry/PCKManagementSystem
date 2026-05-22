@@ -1,0 +1,139 @@
+﻿@using System.Text.Json
+@using PCKManagementSystem.Models.ViewModels
+@model PCKManagementSystem.Models.Report
+@{
+    ViewData["Title"] = "Информация об отчете";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0">@Model.Title</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-file-earmark-text me-2"></i>Тип отчета:</dt>
+                        <dd class="col-sm-9">@Model.ReportType</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-calendar-range me-2"></i>Период:</dt>
+                        <dd class="col-sm-9">@Model.Period</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-calendar me-2"></i>Дата создания:</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-person me-2"></i>Создал:</dt>
+                        <dd class="col-sm-9">@Model.CreatedBy?.FullName (@Model.CreatedBy?.Email)</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-filetype-xlsx me-2"></i>Формат:</dt>
+                        <dd class="col-sm-9">@Model.Format</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-flag me-2"></i>Статус:</dt>
+                        <dd class="col-sm-9">
+                            @switch (Model.Status)
+                            {
+                                case ReportStatus.Generated:
+                                    <span class="badge bg-success">Сгенерирован</span>
+                                    break;
+                                case ReportStatus.Sent:
+                                    <span class="badge bg-info">Отправлен</span>
+                                    break;
+                                case ReportStatus.Archived:
+                                    <span class="badge bg-secondary">В архиве</span>
+                                    break;
+                                case ReportStatus.Error:
+                                    <span class="badge bg-danger">Ошибка</span>
+                                    break;
+                            }
+                        </dd>
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(Model.ReportDataJson))
+                    {
+                        <hr />
+                        <h6><i class="bi bi-database me-2"></i>Данные отчета:</h6>
+                        <pre class="bg-light p-3 rounded"><code>@Model.ReportDataJson</code></pre>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ParametersJson))
+                    {
+                        <hr />
+                        <h6><i class="bi bi-sliders2 me-2"></i>Параметры генерации:</h6>
+                        <div class="bg-light p-3 rounded">
+                            @{
+                                var parameters = JsonSerializer.Deserialize<ReportParameterViewModel>(Model.ParametersJson);
+                                if (parameters != null)
+                                {
+                                    <ul class="mb-0">
+                                        @if (!string.IsNullOrEmpty(parameters.PeriodDisplay))
+                                        {
+                                            <li><strong>Период:</strong> @parameters.PeriodDisplay</li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(parameters.AcademicYear))
+                                        {
+                                            <li><strong>Учебный год:</strong> @parameters.AcademicYear</li>
+                                        }
+                                        @if (parameters.Semester.HasValue)
+                                        {
+                                            <li><strong>Семестр:</strong> @parameters.Semester</li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(parameters.TeacherName))
+                                        {
+                                            <li><strong>Преподаватель:</strong> @parameters.TeacherName</li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(parameters.DisciplineName))
+                                        {
+                                            <li><strong>Дисциплина:</strong> @parameters.DisciplineName</li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(parameters.DocumentStatusName))
+                                        {
+                                            <li><strong>Статус документа:</strong> @parameters.DocumentStatusName</li>
+                                        }
+                                    </ul>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    @if (!string.IsNullOrEmpty(Model.FilePath))
+                    {
+                        <a href="@Model.FilePath" class="btn btn-success rounded-pill" download>
+                            <i class="bi bi-download"></i> Скачать отчет
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-auto">
+                        <i class="bi bi-arrow-left"></i> Назад
+                    </a>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline;"
+                          onsubmit="return confirm('Удалить отчет?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger rounded-pill">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-info text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Информация</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Что можно сделать:</strong></p>
+                    <ul>
+                        <li>Скачать отчет в формате @Model.Format</li>
+                        <li>Просмотреть параметры генерации</li>
+                        <li>Удалить отчет</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

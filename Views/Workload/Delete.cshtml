@@ -1,0 +1,66 @@
+﻿@model PCKManagementSystem.Models.Workload
+
+@{
+    ViewData["Title"] = "Удаление нагрузки";
+}
+
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-trash3 me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="alert alert-warning">
+        <h5>Вы уверены, что хотите удалить эту запись о нагрузке?</h5>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-person me-2"></i>Преподаватель:</dt>
+                        <dd class="col-sm-9">@Model.Teacher?.FullName</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-book me-2"></i>Дисциплина:</dt>
+                        <dd class="col-sm-9">@Model.Discipline?.Name (@Model.Discipline?.Code)</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-1-circle me-2"></i>Курс:</dt>
+                        <dd class="col-sm-9">@(Model.Course.HasValue ? $"{Model.Course} курс" : "—")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-building me-2"></i>Форма обучения:</dt>
+                        <dd class="col-sm-9">@(Model.StudyForm ?? "—")</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-calendar-range me-2"></i>Учебный год:</dt>
+                        <dd class="col-sm-9">@Model.AcademicYear</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-1-circle me-2"></i>Семестр:</dt>
+                        <dd class="col-sm-9">@Model.Semester</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-clock me-2"></i>Часы:</dt>
+                        <dd class="col-sm-9">@Model.Hours</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-tag me-2"></i>Тип нагрузки:</dt>
+                        <dd class="col-sm-9">@Model.LoadType</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-people me-2"></i>Кол-во групп:</dt>
+                        <dd class="col-sm-9">@Model.GroupsCount</dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Comments))
+                        {
+                            <dt class="col-sm-3"><i class="bi bi-chat-dots me-2"></i>Комментарий:</dt>
+                            <dd class="col-sm-9">@Model.Comments</dd>
+                        }
+                    </dl>
+
+                    <form asp-action="Delete" method="post" class="d-flex gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <i class="bi bi-trash me-2"></i>Подтвердить удаление
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

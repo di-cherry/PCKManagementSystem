@@ -1,0 +1,42 @@
+﻿@model PCKManagementSystem.Models.Discipline
+
+@{
+    ViewData["Title"] = "Просмотр дисциплины";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4"><i class="bi bi-hash me-2"></i>Код:</dt>
+                        <dd class="col-sm-8"><strong>@Model.Code</strong></dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-book me-2"></i>Название:</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-diagram-3 me-2"></i>Специальность:</dt>
+                        <dd class="col-sm-8">@Model.Specialty?.Name</dd>
+                    </dl>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    @if (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning rounded-pill">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-auto">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

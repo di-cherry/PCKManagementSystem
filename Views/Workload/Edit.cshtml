@@ -1,0 +1,266 @@
+﻿@model PCKManagementSystem.Models.ViewModels.WorkloadCreateViewModel
+@{
+    ViewData["Title"] = "Редактирование нагрузки";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+
+                        <!-- Преподаватель -->
+                        <div class="form-group mb-3">
+                            <label asp-for="TeacherId" class="control-label fw-semibold required-field">Преподаватель</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                <select asp-for="TeacherId" class="form-control" asp-items="Model.Teachers">
+                                    <option value="">-- Выберите преподавателя --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="TeacherId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Дисциплина -->
+                        <div class="form-group mb-3">
+                            <label asp-for="DisciplineId" class="control-label fw-semibold required-field">Дисциплина</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                                <select asp-for="DisciplineId" class="form-control" asp-items="Model.Disciplines">
+                                    <option value="">-- Выберите дисциплину --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="DisciplineId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Курс и форма обучения -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Course" class="control-label fw-semibold required-field">Курс</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-1-circle"></i></span>
+                                        <select asp-for="Course" class="form-control">
+                                            <option value="">-- Не указан --</option>
+                                            <option value="1">1 курс</option>
+                                            <option value="2">2 курс</option>
+                                            <option value="3">3 курс</option>
+                                            <option value="4">4 курс</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Course" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StudyForm" class="control-label fw-semibold">Форма обучения</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                                        <select asp-for="StudyForm" class="form-control">
+                                            <option value="">-- Не указана --</option>
+                                            <option value="Очная">Очная</option>
+                                            <option value="Заочная">Заочная</option>
+                                            <option value="Очно-заочная">Очно-заочная</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="StudyForm" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Учебный год, Семестр, Кол-во групп -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AcademicYear" class="control-label fw-semibold required-field">Учебный год</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar-range"></i></span>
+                                        <select asp-for="AcademicYear" class="form-control">
+                                            <option value="">-- Выберите год --</option>
+                                            <option value="2025-2026">2025-2026</option>
+                                            <option value="2026-2027">2026-2027</option>
+                                            <option value="2027-2028">2027-2028</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="AcademicYear" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Semester" class="control-label fw-semibold required-field">Семестр</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-1-circle"></i></span>
+                                        <select asp-for="Semester" class="form-control">
+                                            <option value="">-- Выберите --</option>
+                                            <option value="1">1 семестр</option>
+                                            <option value="2">2 семестр</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Semester" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="GroupsCount" class="control-label fw-semibold">Кол-во групп</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-people"></i></span>
+                                        <input asp-for="GroupsCount" class="form-control" type="number" min="1" id="GroupsCountInput" />
+                                    </div>
+                                    <span asp-validation-for="GroupsCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Часы на одну группу + Итоговые часы -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Hours" class="control-label fw-semibold required-field">Количество часов</label>
+                                    <input asp-for="Hours" class="form-control" type="number" min="1" id="HoursInput" />
+                                    <span asp-validation-for="Hours" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="control-label fw-semibold">Итоговое количество часов</label>
+                                    <input type="text" class="form-control-plaintext fw-bold" id="TotalHoursPreview" readonly />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Тип нагрузки + Дополнительные часы (появляется при выборе типа) -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="control-label fw-semibold">Тип(ы) нагрузки</label>
+                                    <div id="loadTypeButtons" class="d-flex flex-wrap gap-2">
+                                        @foreach (var type in Model.LoadTypeOptions)  
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary rounded-pill load-type-btn" data-type="@type.Value">
+                                                @type.Text
+                                            </button>
+                                        }
+                                    </div>
+                                    <div id="selectedLoadTypesContainer"></div>
+                                    <span asp-validation-for="SelectedLoadTypes" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="AdditionalHoursGroup" style="display: none;">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AdditionalHours" class="control-label fw-semibold">Дополнительные часы</label>
+                                    <input asp-for="AdditionalHours" class="form-control" type="number" min="0" id="AdditionalHoursInput" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Форма контроля -->
+                        <div class="form-group mb-3">
+                            <label asp-for="ControlType" class="control-label fw-semibold">Форма контроля</label>
+                            <select asp-for="ControlType" class="form-control">
+                                <option value="">-- Не выбрано --</option>
+                                <option>Экзамен</option>
+                                <option>Зачёт</option>
+                                <option>Дифференцированный зачёт</option>
+                                <option>Курсовая работа</option>
+                                <option>Нет</option>
+                            </select>
+                            <span asp-validation-for="ControlType" class="text-danger"></span>
+                        </div>
+
+                        <!-- Комментарий -->
+                        <div class="form-group mb-4">
+                            <label asp-for="Comments" class="control-label fw-semibold">Комментарий</label>
+                            <textarea asp-for="Comments" class="form-control" rows="2" placeholder="При необходимости укажите дополнительные детали..."></textarea>
+                            <span asp-validation-for="Comments" class="text-danger"></span>
+                        </div>
+
+                        <!-- Кнопки -->
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Сохранить
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function updateSelectedLoadTypes() {
+            $('#selectedLoadTypesContainer').empty();
+            $('.load-type-btn.active').each(function() {
+                var typeValue = $(this).data('type');
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'SelectedLoadTypes',
+                    value: typeValue
+                }).appendTo('#selectedLoadTypesContainer');
+            });
+            toggleAdditionalField();
+            updateTotalHours();
+        }
+
+        function toggleAdditionalField() {
+            let anySpecial = false;
+            $('.load-type-btn.active').each(function() {
+                let val = $(this).data('type');
+                if (val === 'Консультации' || val === 'Курсовое проектирование' || val === 'Экзамен') {
+                    anySpecial = true;
+                }
+            });
+            if (anySpecial) {
+                $('#AdditionalHoursGroup').show();
+            } else {
+                $('#AdditionalHoursGroup').hide();
+                $('#AdditionalHoursInput').val(0);
+            }
+        }
+
+        function updateTotalHours() {
+            let hours = parseInt($('#HoursInput').val()) || 0;
+            let groups = parseInt($('#GroupsCountInput').val()) || 1;
+            let additional = parseInt($('#AdditionalHoursInput').val()) || 0;
+            let total = hours * groups + additional;
+            $('#TotalHoursPreview').val(total);
+        }
+
+        $(document).ready(function() {
+            // Инициализация активных кнопок из модели
+            var selectedTypes = @Html.Raw(Json.Serialize(Model.SelectedLoadTypes ?? new List<string>()));
+            $('.load-type-btn').each(function() {
+                var typeVal = $(this).data('type');
+                if (selectedTypes.includes(typeVal)) {
+                    $(this).addClass('active btn-primary').removeClass('btn-outline-secondary');
+                } else {
+                    $(this).removeClass('active btn-primary').addClass('btn-outline-secondary');
+                }
+            });
+
+            // Создаём скрытые поля для выбранных типов
+            updateSelectedLoadTypes();
+
+            // Обработчик кликов по кнопкам
+            $('#loadTypeButtons').on('click', '.load-type-btn', function() {
+                $(this).toggleClass('active btn-primary btn-outline-secondary');
+                updateSelectedLoadTypes();
+            });
+
+            // Слушатели для часов и групп
+            $('#HoursInput, #GroupsCountInput, #AdditionalHoursInput').on('input', updateTotalHours);
+        });
+    </script>
+}

@@ -1,0 +1,107 @@
+﻿@model PCKManagementSystem.Models.ViewModels.TasksCreateViewModel
+@{
+    ViewData["Title"] = "Создание задачи";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Create" enctype="multipart/form-data" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="control-label fw-semibold required-field">Название задачи</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-card-heading"></i></span>
+                                <input asp-for="Title" class="form-control" placeholder="Введите название задачи" />
+                            </div>
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="control-label fw-semibold required-field">Описание</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-text-paragraph"></i></span>
+                                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Подробное описание задачи..."></textarea>
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DisciplineId" class="control-label fw-semibold required-field">Дисциплина</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                                        <select asp-for="DisciplineId" class="form-control" asp-items="Model.Disciplines">
+                                            <option value="">-- Выберите дисциплину --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="DisciplineId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DueDate" class="control-label fw-semibold">Срок выполнения</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-calendar-event"></i></span>
+                                        <input asp-for="DueDate" class="form-control" type="date" />
+                                    </div>
+                                    <span asp-validation-for="DueDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AssignedToId" class="control-label fw-semibold required-field">Исполнитель</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                        <select asp-for="AssignedToId" class="form-control" asp-items="Model.Teachers">
+                                            <option value="">-- Выберите исполнителя --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="AssignedToId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AttachmentFile" class="control-label fw-semibold">Прикрепить файл</label>
+                                    <input asp-for="AttachmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" />
+                                    <small class="text-muted">Разрешены: PDF, DOC, DOCX, XLS, XLSX, TXT</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AttachmentUrl" class="control-label fw-semibold">Ссылка на ресурс</label>
+                                    <input asp-for="AttachmentUrl" class="form-control" placeholder="https://..." />
+                                    <span asp-validation-for="AttachmentUrl" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Создать задачу
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

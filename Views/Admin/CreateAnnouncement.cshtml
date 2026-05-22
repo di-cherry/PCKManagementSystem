@@ -1,0 +1,60 @@
+﻿@model PCKManagementSystem.Models.ViewModels.AnnouncementCreateViewModel
+@{
+    ViewData["Title"] = "Создание объявления";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="CreateAnnouncement" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="control-label fw-semibold required-field"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-megaphone"></i></span>
+                                <input asp-for="Title" class="form-control" placeholder="Введите заголовок" />
+                            </div>
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Content" class="control-label fw-semibold required-field"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-textarea"></i></span>
+                                <textarea asp-for="Content" class="form-control" rows="6" placeholder="Текст объявления..."></textarea>
+                            </div>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label fw-semibold">Активно (отображается пользователям)</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Создать
+                            </button>
+                            <a asp-action="Announcements" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

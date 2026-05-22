@@ -1,0 +1,166 @@
+﻿@model PCKManagementSystem.Models.ViewModels.TasksReportViewModel
+@using TaskStatus = PCKManagementSystem.Models.TaskStatus
+
+<div class="report-container">
+    <div class="text-center mb-4">
+        <h2>@Model.Title</h2>
+        <p class="text-muted">Сгенерирован: @Model.GeneratedAt.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <!-- Статистика по статусам -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.TotalTasks</h3>
+                    <p class="mb-0">Всего задач</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.PendingTasks</h3>
+                    <p class="mb-0">Ожидают</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.InProgressTasks</h3>
+                    <p class="mb-0">В работе</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.CompletedTasks</h3>
+                    <p class="mb-0">Выполнено</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.OverdueTasks</h3>
+                    <p class="mb-0">Просрочено</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.CancelledTasks</h3>
+                    <p class="mb-0">Отменено</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Просроченные задачи -->
+    @if (Model.OverdueTasksList.Any())
+    {
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0">⚠️ Просроченные задачи (требуют внимания!)</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Задача</th>
+                            <th>Исполнитель</th>
+                            <th>Дисциплина</th>
+                            <th>Срок</th>
+                            <th>Постановщик</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OverdueTasksList)
+                        {
+                            <tr class="table-danger">
+                                <td><strong>@item.Title</strong></td>
+                                <td>@item.ExecutorName</td>
+                                <td>@item.DisciplineName</td>
+                                <td>@item.DueDate.ToString("dd.MM.yyyy")</td>
+                                <td>@item.CreatorName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Эффективность исполнителей -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">Эффективность преподавателей</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Преподаватель</th>
+                        <th>Всего задач</th>
+                        <th>Выполнено</th>
+                        <th>Просрочено</th>
+                        <th>% выполнения</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.TasksByExecutor.OrderByDescending(t => t.TotalTasks))
+                    {
+                        <tr>
+                            <td>@item.ExecutorName</td>
+                            <td>@item.TotalTasks</td>
+                            <td>@item.CompletedTasks</td>
+                            <td>@item.OverdueTasks</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: @item.CompletionRate%">
+                                        @item.CompletionRate%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Последние задачи -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Последние задачи</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Задача</th>
+                        <th>Исполнитель</th>
+                        <th>Дисциплина</th>
+                        <th>Срок</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RecentTasks)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td>@item.ExecutorName</td>
+                            <td>@item.DisciplineName</td>
+                            <td>@item.DueDate.ToString("dd.MM.yyyy")</td>
+                            <td>@item.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

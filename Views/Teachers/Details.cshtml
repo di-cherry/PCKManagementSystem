@@ -1,0 +1,82 @@
+﻿@model PCKManagementSystem.Models.ViewModels.TeacherViewModel
+@{
+    ViewData["Title"] = "Карточка преподавателя";
+    var workloads = ViewBag.Workloads as List<PCKManagementSystem.Models.Workload>;
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0">@Model.FullName</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Должность:</dt>
+                        <dd class="col-sm-8">@(Model.Position ?? "—")</dd>
+
+                        <dt class="col-sm-4">Учёная степень:</dt>
+                        <dd class="col-sm-8">@(Model.Degree ?? "—")</dd>
+
+                        <dt class="col-sm-4">Учёное звание:</dt>
+                        <dd class="col-sm-8">@(Model.AcademicTitle ?? "—")</dd>
+
+                        <dt class="col-sm-4">Уровень образования:</dt>
+                        <dd class="col-sm-8">@(Model.EducationLevel ?? "—")</dd>
+
+                        <dt class="col-sm-4">Квалификация:</dt>
+                        <dd class="col-sm-8">@(Model.Qualification ?? "—")</dd>
+
+                        <dt class="col-sm-4">Повышение квалификации:</dt>
+                        <dd class="col-sm-8">@(Model.AdvancedTraining ?? "—")</dd>
+
+                        <dt class="col-sm-4">Проф. переподготовка:</dt>
+                        <dd class="col-sm-8">@(Model.ProfessionalRetraining ?? "—")</dd>
+
+                        <dt class="col-sm-4">Опыт работы:</dt>
+                        <dd class="col-sm-8">@(Model.ExperienceYears.HasValue ? $"{Model.ExperienceYears} лет" : "—")</dd>
+
+                        <dt class="col-sm-4">Статус:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? "Активен" : "Заблокирован")
+                            </span>
+                        </dd>
+                    </dl>
+
+                    @if (workloads != null && workloads.Any())
+                    {
+                        <hr />
+                        <h6><i class="bi bi-bar-chart"></i> Нагрузка по семестрам:</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>Дисциплина</th><th>Уч.год</th><th>Сем.</th><th>Часы</th><th>Тип</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var w in workloads)
+                                {
+                                    <tr><td>@w.Discipline?.Name</td><td>@w.AcademicYear</td><td>@w.Semester</td><td>@w.Hours</td><td>@w.LoadType</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+                <div class="card-footer">
+                    @if (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning rounded-pill">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill">Назад к списку</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

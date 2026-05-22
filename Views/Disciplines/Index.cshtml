@@ -1,0 +1,141 @@
+﻿@model IEnumerable<PCKManagementSystem.Models.Discipline>
+@{
+    ViewData["Title"] = "Дисциплины";
+    var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");
+    var currentFilter = ViewData["CurrentFilter"] as string;
+    var specialtyId = Context.Request.Query["specialtyId"].ToString();
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        @if (isChairmanOrAdmin)
+        {
+            <div class="d-flex gap-2">
+                <a asp-action="Create" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-plus-circle"></i> Добавить дисциплину
+                </a>
+                <a asp-action="ExportToExcel" class="btn btn-success rounded-pill">
+                    <i class="bi bi-file-earmark-excel"></i> Экспорт
+                </a>
+                <a asp-action="Import" class="btn btn-secondary rounded-pill">
+                    <i class="bi bi-upload"></i> Импорт из Excel
+                </a>
+            </div>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Фильтр и поиск -->
+    <div class="filters-section mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Специальность</label>
+                <select name="specialtyId" class="form-select modern-select" onchange="this.form.submit()">
+                    <option value="">Все специальности</option>
+                    @foreach (var specialty in ViewBag.Specialties as List<SelectListItem>)
+                    {
+                        <option value="@specialty.Value" selected="@(specialty.Value == specialtyId)">@specialty.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Поиск</label>
+                <div class="input-group">
+                    <input type="text" name="searchString" class="form-control" placeholder="Код или название..." value="@currentFilter" />
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    @if (!string.IsNullOrEmpty(currentFilter))
+                    {
+                        <a href="@Url.Action("Index", new { specialtyId, sortOrder = ViewData["CurrentSort"] })" class="btn btn-outline-danger">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">Сбросить</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица дисциплин -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["CodeSortParm"]" asp-route-searchString="@currentFilter" asp-route-specialtyId="@specialtyId">Код</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" asp-route-searchString="@currentFilter" asp-route-specialtyId="@specialtyId">Название</a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["SpecialtySortParm"]" asp-route-searchString="@currentFilter" asp-route-specialtyId="@specialtyId">Специальность</a>
+                            </th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="file-icon me-2">
+                                            <i class="bi bi-book"></i>
+                                        </div>
+                                        <strong>@item.Code</strong>
+                                    </div>
+                                </td>
+                                <td>@item.Name</td>
+                                <td>@item.Specialty?.Name</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Просмотр">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (isChairmanOrAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-book fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Дисциплины не найдены</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

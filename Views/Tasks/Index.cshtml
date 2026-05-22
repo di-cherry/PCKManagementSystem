@@ -1,0 +1,405 @@
+﻿@using System.Security.Claims
+@using PCKManagementSystem.Models
+@using PCKManagementSystem.Models.ViewModels
+@using TaskStatus = PCKManagementSystem.Models.TaskStatus
+@model IEnumerable<PCKManagementSystem.Models.ViewModels.TasksListViewModel>
+
+@{
+    ViewData["Title"] = ViewBag.IsMyTasks == true ? "Мои задачи" : "Управление задачами";
+    var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentUserId = !string.IsNullOrEmpty(userIdClaim) ? int.Parse(userIdClaim) : 0;
+
+    // Получаем параметры из запроса для сохранения при сортировке
+    var statusFilter = Context.Request.Query["Status"].ToString();
+    var disciplineId = Context.Request.Query["DisciplineId"].ToString();
+    var assignedToId = Context.Request.Query["AssignedToId"].ToString();
+    var showOverdueOnly = Context.Request.Query["ShowOverdueOnly"] == "true";
+    var sortOrder = Context.Request.Query["sortOrder"].ToString();
+    var searchString = Context.Request.Query["searchString"].ToString();
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        @if (isChairmanOrAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary rounded-pill">
+                <i class="bi bi-plus-circle"></i> Создать задачу
+            </a>
+        }
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="filters-section mb-4">
+        <form method="get" id="filterForm">
+            <!-- Чипсы для статусов -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Статус</label>
+                <div class="filter-chips">
+                    <a href="@Url.Action("Index", new { Status = "", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(string.IsNullOrEmpty(statusFilter) ? "active" : "")">Все</a>
+                    <a href="@Url.Action("Index", new { Status = "0", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(statusFilter == "0" ? "active" : "")">Ожидают</a>
+                    <a href="@Url.Action("Index", new { Status = "1", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(statusFilter == "1" ? "active" : "")">В работе</a>
+                    <a href="@Url.Action("Index", new { Status = "2", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(statusFilter == "2" ? "active" : "")">Выполнены</a>
+                    <a href="@Url.Action("Index", new { Status = "3", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(statusFilter == "3" ? "active" : "")">Просрочены</a>
+                    <a href="@Url.Action("Index", new { Status = "4", DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder, searchString })"
+                       class="chip @(statusFilter == "4" ? "active" : "")">Отменены</a>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-end">
+                <!-- Поисковая строка -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Поиск</label>
+                    <div class="input-group">
+                        <input type="text" name="searchString" class="form-control" placeholder="Название, описание, исполнитель..." value="@searchString" />
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        @if (!string.IsNullOrEmpty(searchString))
+                        {
+                            <a href="@Url.Action("Index", new { Status = statusFilter, DisciplineId = disciplineId, AssignedToId = assignedToId, ShowOverdueOnly = showOverdueOnly, sortOrder })" class="btn btn-outline-danger">
+                                <i class="bi bi-x"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Дисциплина -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Дисциплина</label>
+                    <select name="DisciplineId" class="form-select modern-select" onchange="this.form.submit()">
+                        <option value="">Все дисциплины</option>
+                        @foreach (var item in ViewBag.Filter?.Disciplines ?? new List<SelectListItem>())
+                        {
+                            <option value="@item.Value" selected="@(item.Value == disciplineId)">@item.Text</option>
+                        }
+                    </select>
+                </div>
+
+                @if (isChairmanOrAdmin)
+                {
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Исполнитель</label>
+                        <select name="AssignedToId" class="form-select modern-select" onchange="this.form.submit()">
+                            <option value="">Все исполнители</option>
+                            @foreach (var item in ViewBag.Filter?.Teachers ?? new List<SelectListItem>())
+                            {
+                                <option value="@item.Value" selected="@(item.Value == assignedToId)">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="col-md-2">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" name="ShowOverdueOnly" value="true"
+                               @(showOverdueOnly ? "checked" : "") onchange="this.form.submit()">
+                        <label class="form-check-label">Только просроченные</label>
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100">Сбросить</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица с сортировкой -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["TitleSortParam"]"
+                                   asp-route-Status="@statusFilter" asp-route-DisciplineId="@disciplineId" asp-route-AssignedToId="@assignedToId"
+                                   asp-route-ShowOverdueOnly="@showOverdueOnly" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Задача
+                                    @if (ViewData["CurrentSort"] == "" || ViewData["CurrentSort"] == null)
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "title_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Дисциплина</th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["ExecutorSortParam"]"
+                                   asp-route-Status="@statusFilter" asp-route-DisciplineId="@disciplineId" asp-route-AssignedToId="@assignedToId"
+                                   asp-route-ShowOverdueOnly="@showOverdueOnly" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Исполнитель
+                                    @if (ViewData["CurrentSort"]?.ToString() == "executor")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "executor_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Постановщик</th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["DueDateSortParam"]"
+                                   asp-route-Status="@statusFilter" asp-route-DisciplineId="@disciplineId" asp-route-AssignedToId="@assignedToId"
+                                   asp-route-ShowOverdueOnly="@showOverdueOnly" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Срок
+                                    @if (ViewData["CurrentSort"]?.ToString() == "dueDate")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "dueDate_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["StatusSortParam"]"
+                                   asp-route-Status="@statusFilter" asp-route-DisciplineId="@disciplineId" asp-route-AssignedToId="@assignedToId"
+                                   asp-route-ShowOverdueOnly="@showOverdueOnly" asp-route-searchString="@searchString"
+                                   class="text-decoration-none">
+                                    Статус
+                                    @if (ViewData["CurrentSort"]?.ToString() == "status")
+                                    {
+                                        <i class="bi bi-arrow-up-short"></i>
+                                    }
+                                    @if (ViewData["CurrentSort"]?.ToString() == "status_desc")
+                                    {
+                                        <i class="bi bi-arrow-down-short"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>Вложения</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(item.IsOverdue ? "table-danger" : "")">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="task-icon me-2 @(item.IsOverdue ? "bg-danger" : "bg-primary")">
+                                            <i class="bi bi-check2-square"></i>
+                                        </div>
+                                        <div>
+                                            <strong>@item.Title</strong>
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                <div class="text-muted small">@item.Description</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">@item.DisciplineCode</span>
+                                    <div class="small">@item.DisciplineName</div>
+                                </td>
+                                <td>@item.AssignedByName</td>
+                                <td>
+                                    <div>@item.DueDateDisplay</div>
+                                    @if (item.IsOverdue)
+                                    {
+                                        <span class="badge bg-danger">Просрочена</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @item.StatusClass">@item.StatusDisplay</span>
+                                    @if (item.Status == TaskStatus.Completed && item.DueDate < DateTime.UtcNow)
+                                    {
+                                        <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Выполнена после срока"></i>
+                                    }
+
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.AttachmentFileName))
+                                    {
+                                        <div>
+                                            <a asp-action="DownloadAttachment" asp-route-id="@item.Id" title="Скачать файл" class="text-decoration-none">
+                                                <i class="bi bi-paperclip text-primary me-1"></i>
+                                                <span>@(item.AttachmentFileName.Length > 20 ? item.AttachmentFileName.Substring(0, 20) + "…" : item.AttachmentFileName)</span>
+                                            </a>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.AttachmentUrl))
+                                    {
+                                        <div class="mt-1">
+                                            <a href="@item.AttachmentUrl" target="_blank" title="Открыть ссылку" class="text-decoration-none">
+                                                <i class="bi bi-link-45deg text-success me-1"></i>
+                                                <span>@(item.AttachmentUrl.Length > 20 ? item.AttachmentUrl.Substring(0, 20) + "…" : item.AttachmentUrl)</span>
+                                            </a>
+                                        </div>
+                                    }
+                                    @if (string.IsNullOrEmpty(item.AttachmentFileName) && string.IsNullOrEmpty(item.AttachmentUrl))
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                    @if (item.Status == TaskStatus.Completed && item.HasCompletionData)
+                                    {
+                                        <i class="bi bi-file-check-fill text-info" title="Есть отчёт о выполнении"></i>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Просмотр">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (item.AssignedToName == User.Identity?.Name || isChairmanOrAdmin)
+                                        {
+                                            @if (item.Status != TaskStatus.Completed && item.Status != TaskStatus.Cancelled)
+                                            {
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                                        Статус
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @if (item.Status != TaskStatus.InProgress)
+                                                        {
+                                                            <li>
+                                                                <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                                    <input type="hidden" name="newStatus" value="@((int)TaskStatus.InProgress)" />
+                                                                    <button type="submit" class="dropdown-item">В работу</button>
+                                                                </form>
+                                                            </li>
+                                                        }
+                                                        @if (item.Status != TaskStatus.Completed)
+                                                        {
+                                                            <li>
+                                                                <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                                    <input type="hidden" name="newStatus" value="@((int)TaskStatus.Completed)" />
+                                                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#completeTaskModal" data-task-id="@item.Id">
+                                                                        Выполнено
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        }
+                                                        @if (isChairmanOrAdmin && item.Status != TaskStatus.Cancelled)
+                                                        {
+                                                            <li>
+                                                                <form asp-action="ChangeStatus" method="post" style="display:inline;">
+                                                                    @Html.AntiForgeryToken()
+                                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                                    <input type="hidden" name="newStatus" value="@((int)TaskStatus.Cancelled)" />
+                                                                    <button type="submit" class="dropdown-item text-danger">Отменить</button>
+                                                                </form>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            }
+                                        }
+                                        @if (isChairmanOrAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-check2-square fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">Задачи не найдены</p>
+                </div>
+            }
+        </div>
+    </div>
+    <!-- Модальное окно выполнения задачи -->
+    <div class="modal fade" id="completeTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="completeTaskForm" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="completeTaskId" />
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Завершение задачи</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="control-label">Комментарий о проделанной работе</label>
+                            <textarea name="Comment" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="control-label">Прикрепить файл с отчётом</label>
+                            <input type="file" name="AttachmentFile" class="form-control" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="control-label">Ссылка на результат (Google Docs, облако)</label>
+                            <input type="url" name="ResultUrl" class="form-control" placeholder="https://..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-success">Завершить задачу</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+    <script>
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+    <script>
+        document.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;          // кнопка, открывшая модалку
+            var taskId = button.getAttribute('data-task-id');
+            var modal = event.target;
+            modal.querySelector('#completeTaskId').value = taskId;
+            var form = modal.querySelector('#completeTaskForm');
+            form.action = '@Url.Action("CompleteTask", "Tasks")/' + taskId;
+        });
+    </script>
+}

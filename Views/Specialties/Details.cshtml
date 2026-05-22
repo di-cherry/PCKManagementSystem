@@ -1,0 +1,57 @@
+﻿@model PCKManagementSystem.Models.Specialty
+@{
+    ViewData["Title"] = "Просмотр специальности";
+    var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Информация о специальности</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3"><i class="bi bi-hash me-2"></i>Код:</dt>
+                        <dd class="col-sm-9">@Model.Code</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-mortarboard me-2"></i>Название:</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
+
+                        <dt class="col-sm-3"><i class="bi bi-book me-2"></i>Дисциплин:</dt>
+                        <dd class="col-sm-9">@Model.Disciplines?.Count()</dd>
+                    </dl>
+
+                    @if (Model.Disciplines != null && Model.Disciplines.Any())
+                    {
+                        <hr />
+                        <h6>Дисциплины специальности:</h6>
+                        <ul>
+                            @foreach (var disc in Model.Disciplines)
+                            {
+                                <li>@disc.Code - @disc.Name</li>
+                            }
+                        </ul>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    @if (isChairmanOrAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning rounded-pill">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger rounded-pill">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill ms-auto">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,408 @@
+﻿@using PCKManagementSystem.Models
+@using PCKManagementSystem.Models.ViewModels
+@using TaskStatus = PCKManagementSystem.Models.TaskStatus
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Главная панель";
+    var isAdmin = User.IsInRole("Администратор");
+    var isChairman = User.IsInRole("Председатель ПЦК");
+    var isTeacher = User.IsInRole("Преподаватель");
+    var today = DateTime.Today;
+}
+
+<div class="dashboard-modern">
+    <!-- Двухколоночная сетка -->
+    <div class="dashboard-grid">
+        <!-- Основная колонка (левая) -->
+        <div class="main-column">
+            <!-- Приветственный блок (как в LexieLingua) -->
+            <div class="welcome-modern animate__animated animate__fadeIn">
+                <div class="welcome-text">
+                    <h2>Здравствуйте, @Model.UserName! 👋</h2>
+                    <p class="text-muted">
+                        <i class="bi bi-briefcase"></i> Ваша роль: <strong>@Model.UserRole</strong>
+                    </p>
+                </div>
+                <div class="welcome-avatar">
+                    <span class="avatar-initials">
+                        @(string.IsNullOrEmpty(Model.UserName) ? "U" : Model.UserName.Substring(0, 1).ToUpper())
+                    </span>
+                </div>
+            </div>
+
+            <!-- Блок статистики (4 карточки в ряд) -->
+            <div class="stats-grid">
+                <div class="stat-card-modern">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="bi bi-files"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>@Model.TotalDocuments</h3>
+                        <p>Всего документов</p>
+                        @if (!isAdmin && !isChairman)
+                        {
+                            <small class="text-primary">Ваших: @Model.MyDocuments</small>
+                        }
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="bi bi-check2-square"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>@Model.TotalTasks</h3>
+                        <p>Всего задач</p>
+                        @if (!isAdmin && !isChairman)
+                        {
+                            <small class="text-primary">Ваших: @Model.MyTasks</small>
+                        }
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>@Model.MyPendingTasks</h3>
+                        <p>Ожидают выполнения</p>
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon-modern" style="background: linear-gradient(135deg, #96fbc4 0%, #f9f586 100%);">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>@((isAdmin || isChairman) ? "Управление" : "Профиль")</h3>
+                        <p>@((isAdmin || isChairman) ? "Панель управления" : "Личный кабинет")</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Последние документы (карточки, а не список) -->
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-files me-2"></i>Последние документы</h5>
+                    <a asp-controller="Documents" asp-action="Index" class="btn-sm btn-outline-primary">
+                        Все документы <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body-custom">
+                    @if (Model.RecentDocuments.Any())
+                    {
+                        <div class="documents-grid">
+                            @foreach (var doc in Model.RecentDocuments.Take(3))
+                            {
+                                <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="document-card">
+                                    <div class="doc-icon">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </div>
+                                    <div class="doc-info">
+                                        <h6>@doc.Name</h6>
+                                        <p class="doc-meta">
+                                            <span><i class="bi bi-book"></i> @doc.Discipline?.Name</span>
+                                            <span class="badge @GetStatusBadgeClass(doc.Status)">@GetStatusDisplay(doc.Status)</span>
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person"></i> @doc.Author?.FullName · @doc.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                        if (Model.RecentDocuments.Count() > 3)
+                        {
+                            <div class="text-end mt-3">
+                                <a asp-controller="Documents" asp-action="Index" class="text-muted">и ещё @(Model.RecentDocuments.Count() - 3) →</a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-files"></i>
+                            <p>Нет документов</p>
+                            <a asp-controller="Documents" asp-action="Create" class="btn btn-primary btn-sm">Создать</a>
+                        </div>
+                    }
+                </div>
+            </div>
+            <!-- График активности -->
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-bar-chart-line me-2"></i>Динамика активности</h5>
+                </div>
+                <div class="card-body-custom">
+                    <canvas id="activityChart" height="200"></canvas>
+                </div>
+            </div>
+            @* <!-- Прогресс по дисциплинам (круговые диаграммы) -->
+            @if (Model.DisciplineProgress.Any())
+            {
+                <div class="content-card">
+                    <div class="card-header-custom">
+                        <h5><i class="bi bi-pie-chart me-2"></i>Прогресс по дисциплинам</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="progress-grid">
+                            @foreach (var prog in Model.DisciplineProgress.Take(4))
+                            {
+                                <div class="progress-item">
+                                    <div class="circular-progress" style="--percent: @prog.ProgressPercent;">
+                                        <span class="progress-value">@prog.ProgressPercent%</span>
+                                    </div>
+                                    <p class="progress-label">@prog.DisciplineName</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            } *@
+        </div>
+
+        <!-- Боковая колонка (правая) -->
+        <div class="sidebar-column">
+            <!-- Активные задачи (виджет как в e-Learning) -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <h6><i class="bi bi-check2-square me-2"></i>Активные задачи</h6>
+                    <a asp-controller="Tasks" asp-action="Index" class="text-muted small">все</a>
+                </div>
+                <div class="sidebar-card-body">
+                    @if (Model.RecentTasks.Where(t => t.Status != TaskStatus.Completed && t.Status != TaskStatus.Cancelled).Any())
+                    {
+                        foreach (var task in Model.RecentTasks.Where(t => t.Status != TaskStatus.Completed && t.Status != TaskStatus.Cancelled).Take(4))
+                        {
+                            <a asp-controller="Tasks" asp-action="Details" asp-route-id="@task.Id" class="task-item @(task.Status == TaskStatus.Overdue ? "overdue" : "")">
+                                <div class="task-status">
+                                    <span class="status-dot @GetTaskStatusDotClass(task.Status)"></span>
+                                </div>
+                                <div class="task-info">
+                                    <span class="task-title">@task.Title</span>
+                                    <small class="task-meta">
+                                        <i class="bi bi-calendar"></i> @task.DueDate.ToString("dd.MM")
+                                        @if (task.DueDate.Date == today)
+                                        {
+                                            <span class="badge bg-warning text-dark">сегодня</span>
+                                        }
+                                        else if (task.DueDate.Date == today.AddDays(1))
+                                        {
+                                            <span class="badge bg-info">завтра</span>
+                                        }
+                                    </small>
+                                </div>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">Нет активных задач</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Объявления (компактно) -->
+            @if (Model.Announcements.Any())
+            {
+                <div class="sidebar-card">
+                    <div class="sidebar-card-header">
+                        <h6><i class="bi bi-megaphone me-2"></i>Объявления</h6>
+                    </div>
+                    <div class="sidebar-card-body">
+                        @foreach (var ann in Model.Announcements.Take(2))
+                        {
+                            <div class="announcement-item">
+                                <p class="announcement-title">@ann.Title</p>
+                                <p class="announcement-preview">@(ann.Content.Length > 60 ? ann.Content.Substring(0, 60) + "…" : ann.Content)</p>
+                                <small class="text-muted">@ann.CreatedAt.ToString("dd.MM.yyyy")</small>
+                            </div>
+                            @if (ann != Model.Announcements.Last())
+                            {
+                                <hr class="my-2">
+                            }
+                        }
+                        @if (Model.Announcements.Count > 2)
+                        {
+                            <div class="text-end mt-2">
+                                <a asp-controller="Home" asp-action="Announcements" class="small">все объявления</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Ближайшие события (если есть) -->
+            @if (Model.UpcomingTasks.Any())
+            {
+                <div class="sidebar-card">
+                    <div class="sidebar-card-header">
+                        <h6><i class="bi bi-calendar-event me-2"></i>Ближайшие события</h6>
+                    </div>
+                    <div class="sidebar-card-body">
+                        @foreach (var task in Model.UpcomingTasks.Take(3))
+                        {
+                            <div class="event-item">
+                                <span class="event-date">@task.DueDate.ToString("dd MMM")</span>
+                                <span class="event-title">@task.Title</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Быстрые действия (внизу на всю ширину) -->
+    <div class="quick-actions-card">
+        <div class="quick-actions-header">
+            <h6><i class="bi bi-lightning me-2"></i>Быстрые действия</h6>
+        </div>
+        <div class="quick-actions-body">
+            <a asp-controller="Documents" asp-action="Create" class="action-btn">
+                <i class="bi bi-file-plus"></i> Новый документ
+            </a>
+            @if (isAdmin || isChairman)
+            {
+                <a asp-controller="Tasks" asp-action="Create" class="action-btn">
+                    <i class="bi bi-plus-circle"></i> Создать задачу
+                </a>
+                <a asp-controller="Workload" asp-action="Create" class="action-btn">
+                    <i class="bi bi-bar-chart"></i> Добавить нагрузку
+                </a>
+                <a asp-controller="Reports" asp-action="Create" class="action-btn">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Создать отчет
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Tasks" asp-action="MyTasks" class="action-btn">
+                    <i class="bi bi-list-task"></i> Мои задачи
+                </a>
+                <a asp-controller="Workload" asp-action="MyLoad" class="action-btn">
+                    <i class="bi bi-bar-chart"></i> Моя нагрузка
+                </a>
+                <a asp-area="Identity" asp-page="/Account/Manage/Index" class="action-btn">
+                    <i class="bi bi-gear"></i> Настройки
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    // Те же вспомогательные методы, что были у вас
+    private string GetStatusDisplay(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Draft => "Черновик",
+        DocumentStatus.Review => "На рассмотрении",
+        DocumentStatus.Approved => "Утвержден",
+        DocumentStatus.Rejected => "Отклонен",
+        _ => status.ToString()
+    };
+
+    private string GetStatusBadgeClass(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Draft => "bg-secondary",
+        DocumentStatus.Review => "bg-warning text-dark",
+        DocumentStatus.Approved => "bg-success",
+        DocumentStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private string GetTaskStatusDisplay(PCKManagementSystem.Models.TaskStatus status) => status switch
+    {
+        PCKManagementSystem.Models.TaskStatus.Pending => "Ожидает",
+        PCKManagementSystem.Models.TaskStatus.InProgress => "В работе",
+        PCKManagementSystem.Models.TaskStatus.Completed => "Выполнена",
+        PCKManagementSystem.Models.TaskStatus.Overdue => "Просрочена",
+        PCKManagementSystem.Models.TaskStatus.Cancelled => "Отменена",
+        _ => status.ToString()
+    };
+
+    private string GetTaskStatusBadgeClass(PCKManagementSystem.Models.TaskStatus status) => status switch
+    {
+        PCKManagementSystem.Models.TaskStatus.Pending => "bg-secondary",
+        PCKManagementSystem.Models.TaskStatus.InProgress => "bg-primary",
+        PCKManagementSystem.Models.TaskStatus.Completed => "bg-success",
+        PCKManagementSystem.Models.TaskStatus.Overdue => "bg-danger",
+        PCKManagementSystem.Models.TaskStatus.Cancelled => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    // Новый метод для точки статуса задачи (для боковой панели)
+    private string GetTaskStatusDotClass(PCKManagementSystem.Models.TaskStatus status) => status switch
+    {
+        PCKManagementSystem.Models.TaskStatus.Pending => "status-pending",
+        PCKManagementSystem.Models.TaskStatus.InProgress => "status-progress",
+        PCKManagementSystem.Models.TaskStatus.Completed => "status-completed",
+        PCKManagementSystem.Models.TaskStatus.Overdue => "status-overdue",
+        PCKManagementSystem.Models.TaskStatus.Cancelled => "status-cancelled",
+        _ => "status-pending"
+    };
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Months)),
+                datasets: [
+                    {
+                        label: 'Создано документов',
+                        data: @Html.Raw(Json.Serialize(Model.DocumentsCreated)),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102,126,234,0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Создано задач',
+                        data: @Html.Raw(Json.Serialize(Model.TasksCreated)),
+                        borderColor: '#48bb78',
+                        backgroundColor: 'rgba(72,187,120,0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Выполнено задач',
+                        data: @Html.Raw(Json.Serialize(Model.TasksCompleted)),
+                        borderColor: '#f56565',
+                        backgroundColor: 'rgba(245,101,101,0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Количество'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Месяц'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

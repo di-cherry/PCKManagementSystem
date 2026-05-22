@@ -1,0 +1,156 @@
+﻿@model PCKManagementSystem.Models.ViewModels.TeacherEditViewModel
+@{
+    ViewData["Title"] = "Редактирование преподавателя";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Редактирование данных преподавателя</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FullName" class="control-label fw-semibold required-field"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                        <input asp-for="FullName" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="FullName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Email" class="control-label fw-semibold required-field"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                        <input asp-for="Email" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Position" class="control-label fw-semibold">Должность</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-briefcase"></i></span>
+                                        <input asp-for="Position" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="Position" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Degree" class="control-label fw-semibold">Учёная степень</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-award"></i></span>
+                                        <input asp-for="Degree" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="Degree" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="AcademicTitle" class="control-label fw-semibold">Учёное звание</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-mortarboard"></i></span>
+                                        <input asp-for="AcademicTitle" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="AcademicTitle" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="EducationLevel" class="control-label fw-semibold">Уровень образования</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-book"></i></span>
+                                        <input asp-for="EducationLevel" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="EducationLevel" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Qualification" class="control-label fw-semibold">Квалификация</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-patch-check"></i></span>
+                                        <input asp-for="Qualification" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="Qualification" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ExperienceYears" class="control-label fw-semibold">Опыт работы (лет)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                                        <input asp-for="ExperienceYears" class="form-control" type="number" min="0" />
+                                    </div>
+                                    <span asp-validation-for="ExperienceYears" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AdvancedTraining" class="control-label fw-semibold">Повышение квалификации (за 3 года)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-arrow-repeat"></i></span>
+                                <textarea asp-for="AdvancedTraining" class="form-control" rows="2"></textarea>
+                            </div>
+                            <span asp-validation-for="AdvancedTraining" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ProfessionalRetraining" class="control-label fw-semibold">Профессиональная переподготовка</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-diagram-3"></i></span>
+                                <textarea asp-for="ProfessionalRetraining" class="form-control" rows="2"></textarea>
+                            </div>
+                            <span asp-validation-for="ProfessionalRetraining" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label fw-semibold">Активен</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="bi bi-save me-2"></i>Сохранить
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

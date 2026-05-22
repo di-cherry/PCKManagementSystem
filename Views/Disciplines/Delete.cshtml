@@ -1,0 +1,59 @@
+﻿@model PCKManagementSystem.Models.Discipline
+
+@{
+    ViewData["Title"] = "Удаление дисциплины";
+}
+
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-trash3 me-2"></i>@ViewData["Title"]</h1>
+
+    <div class="alert alert-warning">
+        <h5>Вы уверены, что хотите удалить эту дисциплину?</h5>
+        @if (ViewBag.HasRelatedData == true)
+        {
+            <p class="text-danger mb-0 mt-2">
+                <strong>Внимание!</strong> С этой дисциплиной связаны документы или учебная нагрузка. Удаление невозможно.
+            </p>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4"><i class="bi bi-hash me-2"></i>Код:</dt>
+                        <dd class="col-sm-8">@Model.Code</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-book me-2"></i>Название:</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4"><i class="bi bi-diagram-3 me-2"></i>Специальность:</dt>
+                        <dd class="col-sm-8">@Model.Specialty?.Name</dd>
+                    </dl>
+
+                    @if (ViewBag.HasRelatedData == true)
+                    {
+                        <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                            <i class="bi bi-x-circle me-2"></i>Назад к списку
+                        </a>
+                    }
+                    else
+                    {
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" asp-for="Id" />
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                    <i class="bi bi-trash me-2"></i>Подтвердить удаление
+                                </button>
+                                <a asp-action="Index" class="btn btn-secondary rounded-pill px-4">
+                                    <i class="bi bi-x-circle me-2"></i>Отмена
+                                </a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
