@@ -1,0 +1,18 @@
+meta:
+  environment: csharp
+  toolchain:
+    name: dotnet
+    version: "9.0"
+
+build:
+  image: mcr.microsoft.com/dotnet/sdk:9.0-alpine
+  build_command: dotnet publish -c Release -o /app/publish
+  artifacts:
+    - /app/publish
+
+run:
+  persistenceMount: /data
+  image: mcr.microsoft.com/dotnet/aspnet:9.0-alpine
+  run_command: dotnet /app/publish/PCKManagementSystem.dll
+  containerPort: 5000
+  servicePort: 80
