@@ -14,8 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Добавляем DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.CommandTimeout(120)));
+options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Добавляем Identity
@@ -60,7 +59,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 // Настройка лицензии EPPlus для некоммерческого использования
-ExcelPackage.License.SetNonCommercialPersonal("Дипломный проект");
+ExcelPackage.License.SetNonCommercialPersonal("EducationalProject");
 QuestPDF.Settings.License = LicenseType.Community;
 
 // ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ - ИСПРАВЛЕННАЯ ВЕРСИЯ
