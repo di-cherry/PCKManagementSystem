@@ -25,4 +25,5 @@ RUN dotnet publish "./PCKManagementSystem.csproj" -c Release -o /app/publish /p:
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY app.db /app/app.db
 ENTRYPOINT ["dotnet", "PCKManagementSystem.dll"]
