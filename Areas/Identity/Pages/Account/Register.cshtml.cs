@@ -45,9 +45,11 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             public string Email { get; set; } = string.Empty;
 
             [Required(ErrorMessage = "Пароль обязателен")]
-            [StringLength(100, ErrorMessage = "Пароль должен быть от {2} до {1} символов", MinimumLength = 4)]
+            [StringLength(100, ErrorMessage = "Пароль должен быть от {2} до {1} символов", MinimumLength = 8)]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$",
+            ErrorMessage = "Пароль должен содержать хотя бы одну цифру, одну заглавную и одну строчную буквы, а также один спецсимвол")]
             public string Password { get; set; } = string.Empty;
 
             [DataType(DataType.Password)]
