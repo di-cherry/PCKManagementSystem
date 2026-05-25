@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +10,7 @@ using PCKManagementSystem.Hubs;
 using PCKManagementSystem.Models;
 using QuestPDF.Infrastructure;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +60,13 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
+
+// Поддержка заголовков X-Forwarded-* от Amvera
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 // Настройка лицензии EPPlus для некоммерческого использования
 ExcelPackage.License.SetNonCommercialPersonal("EducationalProject");
 QuestPDF.Settings.License = LicenseType.Community;
