@@ -20,7 +20,7 @@
                 <div class="welcome-text">
                     <h2>Здравствуйте, @Model.UserName! 👋</h2>
                     <p class="text-muted">
-                        <i class="bi bi-briefcase"></i> Ваша роль: <strong>@Model.UserRole</strong>
+                        <i class="bi bi-briefcase"></i> Ваша роль: <strong>@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</strong>
                     </p>
                 </div>
                 <div class="welcome-avatar">

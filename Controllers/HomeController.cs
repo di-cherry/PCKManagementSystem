@@ -70,7 +70,7 @@ namespace PCKManagementSystem.Controllers
         {
             "ASP.NET Core MVC",
             "Entity Framework Core",
-            "Microsoft SQL Server",
+            "SQL Lite",
             "Bootstrap 5",
             "ASP.NET Core Identity"
         },
