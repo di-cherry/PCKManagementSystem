@@ -11,8 +11,10 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-body">
-                    <form asp-action="Create" enctype="multipart/form-data">
+                    <form asp-action="Edit" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="Id" />
 
                         <!-- Название документа с иконкой -->
                         <div class="form-group mb-3">
@@ -71,10 +73,13 @@
                         <!-- Поле для файла (без иконки) -->
                         <div class="form-group mb-4">
                             <label class="control-label fw-semibold">Заменить файл (необязательно)</label>
-                            <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" required />
+                            <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"/>
                             <small class="text-muted">Разрешены: PDF, DOC, DOCX, XLS, XLSX, TXT</small>
                         </div>
-
+                        @if (!string.IsNullOrEmpty(Model.FilePath))
+                        {
+                            <p>Текущий файл: <a href="@Url.Action("Download", "Documents", new { id = Model.Id })">@Model.Name</a></p>
+                        }
                         <!-- Кнопки (закругленные) -->
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary rounded-pill">

@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PCKManagementSystem.Data;
+using PCKManagementSystem.Hubs;
 using PCKManagementSystem.Models;
 using PCKManagementSystem.Models.ViewModels;
 using System.Security.Claims;
-using PCKManagementSystem.Hubs;
-
 // Явно указываем алиас для нашего enum
 using TaskStatus = PCKManagementSystem.Models.TaskStatus;
 
@@ -20,14 +20,20 @@ namespace PCKManagementSystem.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<TasksController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IEmailSender _emailSender;
+        private readonly UserManager<User> _userManager;
 
-        public TasksController(ApplicationDbContext context, ILogger<TasksController> logger, IHubContext<NotificationHub> hubContext, IWebHostEnvironment webHostEnvironment)
+        // Базовый путь для постоянного хранилища Amvera
+        private const string StorageBasePath = "/data/uploads";
+
+        public TasksController(ApplicationDbContext context, ILogger<TasksController> logger, IHubContext<NotificationHub> hubContext, IEmailSender emailSender,
+    UserManager<User> userManager)
         {
             _context = context;
             _logger = logger;
             _hubContext = hubContext;
-            _webHostEnvironment = webHostEnvironment;
+            _emailSender = emailSender;
+            _userManager = userManager;
         }
 
         private int GetCurrentUserId()
@@ -60,7 +66,7 @@ namespace PCKManagementSystem.Controllers
                 .Include(t => t.Discipline)
                 .Include(t => t.AssignedTo)
                 .Include(t => t.AssignedBy)
-                .AsQueryable(); // удалён .Include(t => t.Document)
+                .AsQueryable();
 
             if (User.IsInRole("Преподаватель") && !User.IsInRole("Администратор") && !User.IsInRole("Председатель ПЦК"))
                 query = query.Where(t => t.AssignedToId == userId || t.AssignedById == userId);
@@ -196,10 +202,10 @@ namespace PCKManagementSystem.Controllers
                 AttachmentUrl = model.AttachmentUrl
             };
 
-            // Сохранение файла
+            // Сохранение файла в постоянное хранилище
             if (AttachmentFile != null && AttachmentFile.Length > 0)
             {
-                var uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "tasks");
+                var uploadDir = Path.Combine(StorageBasePath, "uploads", "tasks");
                 if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
                 var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(AttachmentFile.FileName)}";
                 var filePath = Path.Combine(uploadDir, fileName);
@@ -216,6 +222,21 @@ namespace PCKManagementSystem.Controllers
             var url = Url.Action("Details", "Tasks", new { id = task.Id });
             await _hubContext.Clients.User(task.AssignedToId.ToString())
                 .SendAsync("ReceiveNotification", message, url);
+
+            var assignedUser = await _userManager.FindByIdAsync(task.AssignedToId.ToString());
+            if (assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
+            {
+                var subject = $"Новая задача: {task.Title}";
+                var body = $@"
+                    <h3>Вам назначена новая задача</h3>
+                    <p><strong>Название:</strong> {task.Title}</p>
+                    <p><strong>Описание:</strong> {task.Description}</p>
+                    <p><strong>Срок выполнения:</strong> {task.DueDate:dd.MM.yyyy}</p>
+                    <p><strong>Постановщик:</strong> {User.Identity?.Name}</p>
+                    <a href='{Url.Action("Details", "Tasks", new { id = task.Id }, "https")}'>Перейти к задаче</a>
+                ";
+                await _emailSender.SendEmailAsync(assignedUser.Email, subject, body);
+            }
 
             TempData["Success"] = "Задача успешно создана";
             return RedirectToAction(nameof(Index));
@@ -270,27 +291,24 @@ namespace PCKManagementSystem.Controllers
                 task.AttachmentUrl = model.AttachmentUrl;
 
                 // Управление файлом
-                // 1. Если отмечено удаление – удаляем старый файл
                 if (RemoveAttachmentFile && !string.IsNullOrEmpty(task.AttachmentFilePath))
                 {
-                    var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, task.AttachmentFilePath.TrimStart('/'));
+                    var oldPath = Path.Combine(StorageBasePath, task.AttachmentFilePath.TrimStart('/'));
                     if (System.IO.File.Exists(oldPath))
                         System.IO.File.Delete(oldPath);
                     task.AttachmentFilePath = null;
                     task.AttachmentFileName = null;
                 }
 
-                // 2. Если загружен новый файл – заменяем (удаляем старый, если он есть и не был удалён)
                 if (NewAttachmentFile != null && NewAttachmentFile.Length > 0)
                 {
-                    // Удаляем старый файл, если он существует
                     if (!string.IsNullOrEmpty(task.AttachmentFilePath))
                     {
-                        var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, task.AttachmentFilePath.TrimStart('/'));
+                        var oldPath = Path.Combine(StorageBasePath, task.AttachmentFilePath.TrimStart('/'));
                         if (System.IO.File.Exists(oldPath))
                             System.IO.File.Delete(oldPath);
                     }
-                    var uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "tasks");
+                    var uploadDir = Path.Combine(StorageBasePath, "uploads", "tasks");
                     if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
                     var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(NewAttachmentFile.FileName)}";
                     var filePath = Path.Combine(uploadDir, fileName);
@@ -329,15 +347,10 @@ namespace PCKManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Корректировка: если задача была просрочена и её берут в работу
             if (newStatus == TaskStatus.InProgress && task.DueDate < DateTime.UtcNow)
-            {
                 task.Status = TaskStatus.InProgress;
-            }
             else
-            {
                 task.Status = newStatus;
-            }
 
             _context.Update(task);
             await _context.SaveChangesAsync();
@@ -380,10 +393,9 @@ namespace PCKManagementSystem.Controllers
             if (task == null) return NotFound();
             if (!CanDeleteTask(task)) return Forbid();
 
-            // Удаляем прикреплённый файл, если есть
             if (!string.IsNullOrEmpty(task.AttachmentFilePath))
             {
-                var filePath = Path.Combine(_webHostEnvironment.WebRootPath, task.AttachmentFilePath.TrimStart('/'));
+                var filePath = Path.Combine(StorageBasePath, task.AttachmentFilePath.TrimStart('/'));
                 if (System.IO.File.Exists(filePath))
                     System.IO.File.Delete(filePath);
             }
@@ -416,7 +428,6 @@ namespace PCKManagementSystem.Controllers
             return View(task);
         }
 
-        // Вспомогательный метод для обновления просроченных задач
         private async Task UpdateOverdueTasks()
         {
             var overdueTasks = await _context.Tasks
@@ -430,7 +441,6 @@ namespace PCKManagementSystem.Controllers
                 await _context.SaveChangesAsync();
         }
 
-        // Вспомогательные методы для заполнения выпадающих списков (без документов)
         private async Task PopulateDropdowns(TasksCreateViewModel model)
         {
             model.Disciplines = await _context.Disciplines
@@ -507,7 +517,7 @@ namespace PCKManagementSystem.Controllers
             if (task == null || string.IsNullOrEmpty(task.AttachmentFilePath))
                 return NotFound();
 
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, task.AttachmentFilePath.TrimStart('/'));
+            var filePath = Path.Combine(StorageBasePath, task.AttachmentFilePath.TrimStart('/'));
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
 
@@ -523,7 +533,6 @@ namespace PCKManagementSystem.Controllers
             if (task == null) return NotFound();
 
             var userId = GetCurrentUserId();
-            // Проверка: только исполнитель или администратор/председатель могут завершить
             if (task.AssignedToId != userId && !User.IsInRole("Администратор") && !User.IsInRole("Председатель ПЦК"))
                 return Forbid();
 
@@ -533,17 +542,13 @@ namespace PCKManagementSystem.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Сохраняем обратную связь
             task.Status = TaskStatus.Completed;
             task.CompletionComment = model.Comment;
-
-            // Сохраняем ссылку
             task.CompletionUrl = model.ResultUrl;
 
-            // Сохраняем файл, если загружен
             if (model.AttachmentFile != null && model.AttachmentFile.Length > 0)
             {
-                var uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "task_completions");
+                var uploadDir = Path.Combine(StorageBasePath, "uploads", "task_completions");
                 if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
                 var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.AttachmentFile.FileName)}";
                 var filePath = Path.Combine(uploadDir, fileName);
@@ -556,12 +561,23 @@ namespace PCKManagementSystem.Controllers
             _context.Update(task);
             await _context.SaveChangesAsync();
 
-            // Уведомление постановщику (и, возможно, админу/председателю)
             var message = $"Задача «{task.Title}» выполнена исполнителем {User.Identity?.Name}.";
             if (!string.IsNullOrEmpty(model.Comment))
                 message += $" Комментарий: {model.Comment}";
             await _hubContext.Clients.User(task.AssignedById.ToString())
                 .SendAsync("ReceiveNotification", message, Url.Action("Details", "Tasks", new { id }));
+
+            var creator = await _userManager.FindByIdAsync(task.AssignedById.ToString());
+            if (creator != null && !string.IsNullOrEmpty(creator.Email))
+            {
+                var subject = $"Задача выполнена: {task.Title}";
+                var body = $@"
+                    <h3>Задача выполнена</h3>
+                    <p>Исполнитель <strong>{User.Identity.Name}</strong> завершил задачу <strong>{task.Title}</strong>.</p>
+                    <a href='{Url.Action("Details", "Tasks", new { id = task.Id }, "https")}'>Посмотреть задачу</a>
+                ";
+                await _emailSender.SendEmailAsync(creator.Email, subject, body);
+            }
 
             TempData["Success"] = "Задача отмечена выполненной. Отправлен отчёт постановщику.";
             return RedirectToAction(nameof(Details), new { id });
@@ -574,7 +590,7 @@ namespace PCKManagementSystem.Controllers
             if (task == null || string.IsNullOrEmpty(task.CompletionAttachmentFilePath))
                 return NotFound();
 
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, task.CompletionAttachmentFilePath.TrimStart('/'));
+            var filePath = Path.Combine(StorageBasePath, task.CompletionAttachmentFilePath.TrimStart('/'));
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
 

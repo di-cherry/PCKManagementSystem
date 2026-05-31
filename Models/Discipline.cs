@@ -22,7 +22,7 @@ namespace PCKManagementSystem.Models
         [ValidateNever]
         public Specialty? Specialty { get; set; }
 
-        
+
 
         [ValidateNever]
         public ICollection<Document>? Documents { get; set; }

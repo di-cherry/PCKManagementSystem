@@ -80,11 +80,8 @@
                                     <label asp-for="AcademicYear" class="control-label fw-semibold required-field">Учебный год</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light"><i class="bi bi-calendar-range"></i></span>
-                                        <select asp-for="AcademicYear" class="form-control">
+                                        <select asp-for="AcademicYear" class="form-control" asp-items="Model.AcademicYears">
                                             <option value="">-- Выберите год --</option>
-                                            <option value="2025-2026">2025-2026</option>
-                                            <option value="2026-2027">2026-2027</option>
-                                            <option value="2027-2028">2027-2028</option>
                                         </select>
                                     </div>
                                     <span asp-validation-for="AcademicYear" class="text-danger"></span>

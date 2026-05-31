@@ -28,16 +28,15 @@ namespace PCKManagementSystem.Controllers
     public class ReportsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ReportsController> _logger;
 
+        // Базовый путь для постоянного хранилища Amvera
+        private const string StorageBasePath = "/data/uploads";
         public ReportsController(
             ApplicationDbContext context,
-            IWebHostEnvironment webHostEnvironment,
             ILogger<ReportsController> logger)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
         }
 
@@ -219,7 +218,7 @@ namespace PCKManagementSystem.Controllers
             {
                 if (!string.IsNullOrEmpty(report.FilePath))
                 {
-                    var filePath = Path.Combine(_webHostEnvironment.WebRootPath, report.FilePath.TrimStart('/'));
+                    var filePath = Path.Combine(StorageBasePath, report.FilePath.TrimStart('/'));
                     if (System.IO.File.Exists(filePath))
                     {
                         var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
@@ -383,7 +382,7 @@ namespace PCKManagementSystem.Controllers
                     .ToList()
             };
 
-            return await ExportReport(report, model.ReportFormat, "Documents", model); 
+            return await ExportReport(report, model.ReportFormat, "Documents", model);
         }
 
         private async Task<IActionResult> GenerateWorkloadReport(ReportParameterViewModel model)
@@ -403,6 +402,7 @@ namespace PCKManagementSystem.Controllers
             {
                 model.DocumentStatusName = GetDocumentStatusDisplay(model.DocumentStatus.Value);
             }
+
             model.PeriodDisplay = (model.StartDate.HasValue || model.EndDate.HasValue)
                 ? $"с {model.StartDate?.ToString("dd.MM.yyyy") ?? "∞"} по {model.EndDate?.ToString("dd.MM.yyyy") ?? "∞"}"
                 : "Не указан";
@@ -424,6 +424,12 @@ namespace PCKManagementSystem.Controllers
 
             if (model.DisciplineId.HasValue)
                 query = query.Where(w => w.DisciplineId == model.DisciplineId.Value);
+
+            if (model.Course.HasValue)
+                query = query.Where(w => w.Course == model.Course.Value);
+
+            if (!string.IsNullOrEmpty(model.StudyForm))
+                query = query.Where(w => w.StudyForm == model.StudyForm);
 
             var workloads = await query.ToListAsync();
 
@@ -642,53 +648,73 @@ namespace PCKManagementSystem.Controllers
                 model.DisciplineName = discipline?.Name;
             }
             if (model.DocumentStatus.HasValue)
-            {
                 model.DocumentStatusName = GetDocumentStatusDisplay(model.DocumentStatus.Value);
-            }
             model.PeriodDisplay = (model.StartDate.HasValue || model.EndDate.HasValue)
                 ? $"с {model.StartDate?.ToString("dd.MM.yyyy") ?? "∞"} по {model.EndDate?.ToString("dd.MM.yyyy") ?? "∞"}"
                 : "Не указан";
-            // Устанавливаем период по умолчанию (текущий учебный год/семестр)
-            var startDate = model.StartDate ?? new DateTime(DateTime.UtcNow.Year, 9, 1); // Начало учебного года
+
+            var startDate = model.StartDate ?? new DateTime(DateTime.UtcNow.Year, 9, 1);
             var endDate = model.EndDate ?? DateTime.UtcNow;
 
-            // Получаем данные за период
-            var documents = await _context.Documents
+            // Базовые запросы
+            var documentsQuery = _context.Documents
                 .Include(d => d.Author)
-                .Where(d => d.CreatedAt >= startDate && d.CreatedAt <= endDate)
-                .ToListAsync();
-
-            var tasks = await _context.Tasks
+                .Include(d => d.Discipline)
+                .AsQueryable();
+            var tasksQuery = _context.Tasks
                 .Include(t => t.AssignedTo)
                 .Include(t => t.AssignedBy)
-                .Where(t => t.DueDate >= startDate && t.DueDate <= endDate)
-                .ToListAsync();
-
-            var workloads = await _context.Workloads
+                .Include(t => t.Discipline)
+                .AsQueryable();
+            var workloadsQuery = _context.Workloads
                 .Include(w => w.Teacher)
-                .Where(w => w.CreatedAt >= startDate && w.CreatedAt <= endDate)
-                .ToListAsync();
+                .AsQueryable();
 
-            // Получаем всех преподавателей
-            var teachers = await _context.Users
-                .Where(u => u.IsActive)
-                .ToListAsync();
+            // Фильтр по датам
+            documentsQuery = documentsQuery.Where(d => d.CreatedAt >= startDate && d.CreatedAt <= endDate);
+            tasksQuery = tasksQuery.Where(t => t.DueDate >= startDate && t.DueDate <= endDate);
+            workloadsQuery = workloadsQuery.Where(w => w.CreatedAt >= startDate && w.CreatedAt <= endDate);
 
-            // Формируем отчет
+            // Дополнительные фильтры
+            if (model.TeacherId.HasValue)
+            {
+                documentsQuery = documentsQuery.Where(d => d.AuthorId == model.TeacherId.Value);
+                tasksQuery = tasksQuery.Where(t => t.AssignedToId == model.TeacherId.Value || t.AssignedById == model.TeacherId.Value);
+                workloadsQuery = workloadsQuery.Where(w => w.TeacherId == model.TeacherId.Value);
+            }
+            if (model.DisciplineId.HasValue)
+            {
+                documentsQuery = documentsQuery.Where(d => d.DisciplineId == model.DisciplineId.Value);
+                tasksQuery = tasksQuery.Where(t => t.DisciplineId == model.DisciplineId.Value);
+                workloadsQuery = workloadsQuery.Where(w => w.DisciplineId == model.DisciplineId.Value);
+            }
+            if (model.Course.HasValue)
+            {
+                workloadsQuery = workloadsQuery.Where(w => w.Course == model.Course.Value);
+            }
+            if (!string.IsNullOrEmpty(model.StudyForm))
+            {
+                workloadsQuery = workloadsQuery.Where(w => w.StudyForm == model.StudyForm);
+            }
+
+            var documents = await documentsQuery.ToListAsync();
+            var tasks = await tasksQuery.ToListAsync();
+            var workloads = await workloadsQuery.ToListAsync();
+
+            var teachers = await _context.Users.Where(u => u.IsActive).ToListAsync();
+
             var report = new ActivityReportViewModel
             {
                 GeneratedAt = DateTime.UtcNow,
                 Period = $"{startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}",
                 Parameters = GetParametersDisplay(model),
 
-                // Сводная статистика
                 TotalDocuments = documents.Count,
                 ApprovedDocuments = documents.Count(d => d.Status == DocumentStatus.Approved),
                 TotalWorkloadHours = workloads.Sum(w => w.Hours),
                 TotalTasks = tasks.Count,
                 CompletedTasks = tasks.Count(t => t.Status == Models.TaskStatus.Completed),
 
-                // Активность преподавателей
                 TeachersActivity = teachers.Select(t => new TeacherActivityViewModel
                 {
                     TeacherName = t.FullName ?? t.Email,
@@ -701,7 +727,6 @@ namespace PCKManagementSystem.Controllers
                 .OrderByDescending(t => t.DocumentsCreated + t.TasksAssigned)
                 .ToList(),
 
-                // Динамика по месяцам
                 MonthlyActivity = Enumerable.Range(0, 12)
                     .Select(i => startDate.AddMonths(i))
                     .Where(d => d <= endDate)
@@ -790,7 +815,7 @@ namespace PCKManagementSystem.Controllers
                 {
                     // Сохраняем файл на диск
                     var fileName = $"Report_{reportType}_{savedReport.Id}_{DateTime.UtcNow:yyyyMMdd_HHmm}.{fileExtension}";
-                    var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "reports");
+                    var uploadPath = Path.Combine(StorageBasePath, "reports");
                     if (!Directory.Exists(uploadPath))
                         Directory.CreateDirectory(uploadPath);
 
@@ -931,8 +956,8 @@ namespace PCKManagementSystem.Controllers
             ws.Cells[row, 3].Value = "Уч.год";
             ws.Cells[row, 4].Value = "Сем.";
             ws.Cells[row, 5].Value = "Часы";
-            ws.Cells[row, 6].Value = "Тип"; 
-            ws.Cells[row, 7].Value = "Форма контроля";  
+            ws.Cells[row, 6].Value = "Тип";
+            ws.Cells[row, 7].Value = "Форма контроля";
             ws.Cells[row, 8].Value = "Групп";
             row++;
 
@@ -944,7 +969,7 @@ namespace PCKManagementSystem.Controllers
                 ws.Cells[row, 4].Value = item.Semester;
                 ws.Cells[row, 5].Value = item.Hours;
                 ws.Cells[row, 6].Value = item.LoadType;
-                ws.Cells[row, 7].Value = item.ControlType; 
+                ws.Cells[row, 7].Value = item.ControlType;
                 ws.Cells[row, 8].Value = item.GroupsCount;
                 row++;
             }
@@ -1112,7 +1137,7 @@ namespace PCKManagementSystem.Controllers
                     sb.AppendLine($"Всего преподавателей,{workloadReport.TotalTeachers}");
                     sb.AppendLine($"Всего дисциплин,{workloadReport.TotalDisciplines}");
                     sb.AppendLine($"Всего часов,{workloadReport.TotalHours}");
-                    sb.AppendLine($"Всего групп,{workloadReport.TotalGroups}"); 
+                    sb.AppendLine($"Всего групп,{workloadReport.TotalGroups}");
                     sb.AppendLine();
                     sb.AppendLine("Детальная нагрузка");
                     sb.AppendLine("Преподаватель,Дисциплина,Уч.год,Семестр,Часы,Тип,Форма контроля,Групп");
@@ -2021,12 +2046,7 @@ namespace PCKManagementSystem.Controllers
         private async Task PopulateDropdowns(ReportParameterViewModel model)
         {
             // Учебные годы
-            model.AcademicYears = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "2025-2026", Text = "2025-2026" },
-                new SelectListItem { Value = "2026-2027", Text = "2026-2027" },
-                new SelectListItem { Value = "2027-2028", Text = "2027-2028" }
-            };
+            model.AcademicYears = GetAcademicYears();
 
             // Преподаватели
             model.Teachers = await _context.Users
@@ -2061,6 +2081,25 @@ namespace PCKManagementSystem.Controllers
                 })
                 .ToList();
             model.DocumentStatuses.Insert(0, new SelectListItem { Value = "", Text = "-- Все статусы --" });
+
+            // Курсы (1-4)
+            model.Courses = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "1", Text = "1 курс" },
+                new SelectListItem { Value = "2", Text = "2 курс" },
+                new SelectListItem { Value = "3", Text = "3 курс" },
+                new SelectListItem { Value = "4", Text = "4 курс" }
+            };
+            model.Courses.Insert(0, new SelectListItem { Value = "", Text = "Все курсы" });
+
+            // Формы обучения (из существующих данных, можно уникальные)
+            var studyForms = await _context.Workloads
+                .Where(w => !string.IsNullOrEmpty(w.StudyForm))
+                .Select(w => w.StudyForm)
+                .Distinct()
+                .ToListAsync();
+            model.StudyForms = studyForms.Select(sf => new SelectListItem { Value = sf, Text = sf }).ToList();
+            model.StudyForms.Insert(0, new SelectListItem { Value = "", Text = "Все формы" });
         }
 
         private ReportParametersDisplay GetParametersDisplay(ReportParameterViewModel model)
@@ -2192,7 +2231,7 @@ namespace PCKManagementSystem.Controllers
                 // Удаляем файл, если он есть
                 if (!string.IsNullOrEmpty(report.FilePath))
                 {
-                    var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, report.FilePath.TrimStart('/'));
+                    var fullPath = Path.Combine(StorageBasePath, report.FilePath.TrimStart('/'));
                     if (System.IO.File.Exists(fullPath))
                     {
                         System.IO.File.Delete(fullPath);
@@ -2205,6 +2244,20 @@ namespace PCKManagementSystem.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private List<SelectListItem> GetAcademicYears(int startOffset = -2, int yearsCount = 5)
+        {
+            var currentYear = DateTime.Now.Year;
+            var startYear = currentYear + startOffset;
+            var years = new List<SelectListItem>();
+            for (int i = 0; i < yearsCount; i++)
+            {
+                var year = startYear + i;
+                var value = $"{year}-{year + 1}";
+                years.Add(new SelectListItem { Value = value, Text = value });
+            }
+            return years;
         }
     }
 }

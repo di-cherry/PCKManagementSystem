@@ -39,6 +39,12 @@ namespace PCKManagementSystem.Models.ViewModels
         [Required(ErrorMessage = "Выберите формат")]
         public ReportFormat ReportFormat { get; set; } = ReportFormat.HTML;
 
+        [Display(Name = "Курс")]
+        public int? Course { get; set; }
+
+        [Display(Name = "Форма обучения")]
+        public string? StudyForm { get; set; }
+
         // Для выпадающих списков
         [ValidateNever]
         public List<SelectListItem>? AcademicYears { get; set; }
@@ -48,6 +54,10 @@ namespace PCKManagementSystem.Models.ViewModels
         public List<SelectListItem>? Disciplines { get; set; }
         [ValidateNever]
         public List<SelectListItem>? DocumentStatuses { get; set; }
+        [ValidateNever]
+        public List<SelectListItem>? Courses { get; set; }
+        [ValidateNever]
+        public List<SelectListItem>? StudyForms { get; set; }
 
         // Поля для отображения (не участвуют в валидации, просто для сохранения в JSON)
         public string? TeacherName { get; set; }

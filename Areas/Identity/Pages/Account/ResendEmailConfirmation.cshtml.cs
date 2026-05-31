@@ -12,12 +12,12 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
     public class ResendEmailConfirmationModel : PageModel
     {
         private readonly UserManager<User> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IEmailSender _emailSender;
 
-        public ResendEmailConfirmationModel(UserManager<User> userManager, IEmailService emailService)
+        public ResendEmailConfirmationModel(UserManager<User> userManager, IEmailSender emailSender)
         {
             _userManager = userManager;
-            _emailService = emailService;
+            _emailSender = emailSender;
         }
 
         [BindProperty]

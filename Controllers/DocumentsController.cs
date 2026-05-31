@@ -16,16 +16,15 @@ namespace PCKManagementSystem.Controllers
     public class DocumentsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<DocumentsController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly UserManager<User> _userManager;
 
-        public DocumentsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, ILogger<DocumentsController> logger,
-        IHubContext<NotificationHub> hubContext, UserManager<User> userManager)
+        private const string StorageBasePath = "/data/uploads";
+        public DocumentsController(ApplicationDbContext context, ILogger<DocumentsController> logger,
+            IHubContext<NotificationHub> hubContext, UserManager<User> userManager)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
             _hubContext = hubContext;
             _userManager = userManager;
@@ -43,7 +42,7 @@ namespace PCKManagementSystem.Controllers
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, filePath.TrimStart('/'));
+                var fullPath = Path.Combine(StorageBasePath, filePath.TrimStart('/'));
                 if (System.IO.File.Exists(fullPath))
                 {
                     System.IO.File.Delete(fullPath);
@@ -168,7 +167,6 @@ namespace PCKManagementSystem.Controllers
             document.CreatedAt = DateTime.UtcNow;
             document.Status = DocumentStatus.Draft;
 
-            // Обработка файла
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError("file", "Необходимо загрузить файл документа");
@@ -178,35 +176,27 @@ namespace PCKManagementSystem.Controllers
 
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt" };
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
             if (!allowedExtensions.Contains(fileExtension))
             {
-                ModelState.AddModelError("file", "Недопустимый тип файла. Разрешены: PDF, DOC, DOCX, XLS, XLSX, TXT");
+                ModelState.AddModelError("file", "Недопустимый тип файла");
                 ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
                 return View(document);
             }
 
             var fileName = $"{Guid.NewGuid()}{fileExtension}";
-            var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "documents");
+            var uploadPath = Path.Combine(StorageBasePath, "uploads", "documents");
             var filePath = Path.Combine(uploadPath, fileName);
 
             if (!Directory.Exists(uploadPath))
                 Directory.CreateDirectory(uploadPath);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
-            {
                 await file.CopyToAsync(stream);
-            }
 
             document.FilePath = $"/uploads/documents/{fileName}";
 
-            // Проверка валидации модели
             if (!ModelState.IsValid)
             {
-                var errors = string.Join("; ", ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage));
-                TempData["Error"] = "Ошибка валидации: " + errors;
                 ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
                 return View(document);
             }
@@ -222,33 +212,27 @@ namespace PCKManagementSystem.Controllers
             {
                 TempData["Error"] = "Ошибка базы данных: " + ex.Message;
                 if (ex.InnerException != null)
-                    TempData["Error"] += " | Внутренняя ошибка: " + ex.InnerException.Message;
+                    TempData["Error"] += " | " + ex.InnerException.Message;
+                ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
+                return View(document);
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Общая ошибка: " + ex.Message;
+                TempData["Error"] = "Ошибка: " + ex.Message;
+                ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
+                return View(document);
             }
-
-            ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
-            return View(document);
         }
 
         // GET: Documents/Edit/5
         [Authorize(Roles = "Администратор,Председатель ПЦК,Преподаватель")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var document = await _context.Documents.FindAsync(id);
-            if (document == null)
-            {
-                return NotFound();
-            }
+            if (document == null) return NotFound();
 
-            // Проверка: редактировать можно только черновики и только свой документ
             var userId = GetCurrentUserId();
             if (document.Status != DocumentStatus.Draft)
             {
@@ -256,9 +240,7 @@ namespace PCKManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
             if (document.AuthorId != userId && !User.IsInRole("Администратор"))
-            {
                 return Forbid();
-            }
 
             ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
             return View(document);
@@ -270,18 +252,11 @@ namespace PCKManagementSystem.Controllers
         [Authorize(Roles = "Администратор,Председатель ПЦК,Преподаватель")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DocumentType,Version,DisciplineId")] Document document, IFormFile? file)
         {
-            if (id != document.Id)
-            {
-                return NotFound();
-            }
+            if (id != document.Id) return NotFound();
 
             var existingDocument = await _context.Documents.FindAsync(id);
-            if (existingDocument == null)
-            {
-                return NotFound();
-            }
+            if (existingDocument == null) return NotFound();
 
-            // Проверка прав
             var userId = GetCurrentUserId();
             if (existingDocument.Status != DocumentStatus.Draft)
             {
@@ -289,26 +264,20 @@ namespace PCKManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
             if (existingDocument.AuthorId != userId && !User.IsInRole("Администратор"))
-            {
                 return Forbid();
-            }
 
-            // Обновляем поля
             existingDocument.Name = document.Name;
             existingDocument.DocumentType = document.DocumentType;
             existingDocument.Version = document.Version;
             existingDocument.DisciplineId = document.DisciplineId;
 
-            // Если загружен новый файл
             if (file != null && file.Length > 0)
             {
-                // Удаляем старый файл
-                DeleteFileIfExists(existingDocument.FilePath);
+                if (!string.IsNullOrEmpty(existingDocument.FilePath))
+                    DeleteFileIfExists(existingDocument.FilePath);
 
-                // Сохраняем новый файл
                 var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt" };
                 var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
                 if (!allowedExtensions.Contains(fileExtension))
                 {
                     ModelState.AddModelError("file", "Недопустимый тип файла");
@@ -317,46 +286,34 @@ namespace PCKManagementSystem.Controllers
                 }
 
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "documents");
+                var uploadPath = Path.Combine(StorageBasePath, "uploads", "documents");
                 var filePath = Path.Combine(uploadPath, fileName);
-
                 if (!Directory.Exists(uploadPath))
-                {
                     Directory.CreateDirectory(uploadPath);
-                }
-
                 using (var stream = new FileStream(filePath, FileMode.Create))
-                {
                     await file.CopyToAsync(stream);
-                }
-
                 existingDocument.FilePath = $"/uploads/documents/{fileName}";
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(existingDocument);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Документ успешно обновлен";
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DocumentExists(document.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
+                return View(document);
             }
 
-            ViewData["DisciplineId"] = new SelectList(_context.Disciplines, "Id", "Name", document.DisciplineId);
-            return View(document);
+            try
+            {
+                _context.Update(existingDocument);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Документ успешно обновлён";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!DocumentExists(document.Id))
+                    return NotFound();
+                throw;
+            }
         }
 
         // POST: Documents/SendToReview/5
@@ -572,15 +529,11 @@ namespace PCKManagementSystem.Controllers
         {
             var document = await _context.Documents.FindAsync(id);
             if (document == null || string.IsNullOrEmpty(document.FilePath))
-            {
                 return NotFound();
-            }
 
-            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, document.FilePath.TrimStart('/'));
+            var filePath = Path.Combine(StorageBasePath, document.FilePath.TrimStart('/'));
             if (!System.IO.File.Exists(filePath))
-            {
                 return NotFound();
-            }
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             var fileName = Path.GetFileName(document.FilePath);

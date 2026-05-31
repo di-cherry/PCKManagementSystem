@@ -74,6 +74,9 @@ namespace PCKManagementSystem.Models.ViewModels
 
         // Для выпадающего списка: все возможные типы
         public List<SelectListItem> LoadTypeOptions { get; set; } = new List<SelectListItem>();
+
+        [ValidateNever]
+        public List<SelectListItem>? AcademicYears { get; set; }
     }
 
     public class WorkloadFilterViewModel

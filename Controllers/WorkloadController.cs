@@ -140,12 +140,7 @@ namespace PCKManagementSystem.Controllers
                 Semester = semester,
                 TeacherId = teacherId,
                 DisciplineId = disciplineId,
-                AcademicYears = new List<SelectListItem>
-        {
-            new SelectListItem { Value = "2025-2026", Text = "2025-2026" },
-            new SelectListItem { Value = "2026-2027", Text = "2026-2027" },
-            new SelectListItem { Value = "2027-2028", Text = "2027-2028" }
-        },
+                AcademicYears = GetAcademicYears(),
                 Teachers = await _context.Users.Where(u => u.IsActive).OrderBy(u => u.FullName)
                     .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = u.FullName }).ToListAsync(),
                 Disciplines = await _context.Disciplines.OrderBy(d => d.Code)
@@ -178,7 +173,8 @@ namespace PCKManagementSystem.Controllers
             {
                 Teachers = await GetTeachersList(),
                 Disciplines = await GetDisciplinesList(),
-                LoadTypeOptions = GetLoadTypeOptions()
+                LoadTypeOptions = GetLoadTypeOptions(),
+                AcademicYears = GetAcademicYears()
             };
 
             return View(model);
@@ -241,6 +237,7 @@ namespace PCKManagementSystem.Controllers
             model.Teachers = await GetTeachersList();
             model.Disciplines = await GetDisciplinesList();
             model.LoadTypeOptions = GetLoadTypeOptions();
+            model.AcademicYears = GetAcademicYears();
 
             return View(model);
         }
@@ -264,7 +261,8 @@ namespace PCKManagementSystem.Controllers
             {
                 TeacherId = workload.TeacherId,
                 DisciplineId = workload.DisciplineId,
-                AcademicYear = workload.AcademicYear,
+                AcademicYear = workload.AcademicYear, 
+                AcademicYears = GetAcademicYears(),
                 Semester = workload.Semester,
                 Hours = workload.Hours,
                 //LoadType = workload.LoadType,
@@ -273,7 +271,7 @@ namespace PCKManagementSystem.Controllers
                 Teachers = await GetTeachersList(),
                 Disciplines = await GetDisciplinesList(),
                 LoadTypeOptions = GetLoadTypeOptions(),
-                SelectedLoadTypes = string.IsNullOrEmpty(workload.LoadType) ? new List<string>(): workload.LoadType.Split(", ").ToList(),
+                SelectedLoadTypes = string.IsNullOrEmpty(workload.LoadType) ? new List<string>() : workload.LoadType.Split(", ").ToList(),
                 Course = workload.Course,
                 StudyForm = workload.StudyForm
             };
@@ -292,7 +290,7 @@ namespace PCKManagementSystem.Controllers
             {
                 return NotFound();
             }
-            
+
             // Проверка на дублирование (исключая текущую запись)
             var exists = await _context.Workloads.AnyAsync(w =>
                 w.Id != id &&
@@ -305,7 +303,7 @@ namespace PCKManagementSystem.Controllers
 
             if (ModelState.IsValid)
             {
-                
+
                 workload.TeacherId = model.TeacherId;
                 workload.DisciplineId = model.DisciplineId;
                 workload.AcademicYear = model.AcademicYear;
@@ -331,6 +329,7 @@ namespace PCKManagementSystem.Controllers
             model.Teachers = await GetTeachersList();
             model.Disciplines = await GetDisciplinesList();
             model.LoadTypeOptions = GetLoadTypeOptions();
+            model.AcademicYears = GetAcademicYears();
 
             return View(model);
         }
@@ -439,6 +438,20 @@ namespace PCKManagementSystem.Controllers
         private bool WorkloadExists(int id)
         {
             return _context.Workloads.Any(e => e.Id == id);
+        }
+
+        private List<SelectListItem> GetAcademicYears(int startOffset = -2, int yearsCount = 5)
+        {
+            var currentYear = DateTime.Now.Year;
+            var startYear = currentYear + startOffset; // начиная с прошлого года
+            var years = new List<SelectListItem>();
+            for (int i = 0; i < yearsCount; i++)
+            {
+                var year = startYear + i;
+                var value = $"{year}-{year + 1}";
+                years.Add(new SelectListItem { Value = value, Text = value });
+            }
+            return years;
         }
     }
 }

@@ -14,7 +14,7 @@
     <PackageReference Include="EfCore.SchemaCompare" Version="8.2.0" />
     <PackageReference Include="EPPlus" Version="8.5.0" />
     <PackageReference Include="ErikEJ.EntityFrameworkCore.DgmlBuilder" Version="6.0.0" />
-    <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />

@@ -78,6 +78,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text bg-light"><i class="bi bi-calendar-week"></i></span>
                                         <select asp-for="AcademicYear" class="form-control" asp-items="Model.AcademicYears">
+                                            <option value="">-- Все годы --</option>
                                         </select>
                                     </div>
                                 </div>
@@ -116,6 +117,26 @@
                                         <select asp-for="DisciplineId" class="form-control" asp-items="Model.Disciplines">
                                         </select>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Строка с курсом и формой обучения -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Course" class="control-label fw-semibold">Курс</label>
+                                    <select asp-for="Course" class="form-control" asp-items="Model.Courses">
+                                        <option value="">-- Все --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StudyForm" class="control-label fw-semibold">Форма обучения</label>
+                                    <select asp-for="StudyForm" class="form-control" asp-items="Model.StudyForms">
+                                        <option value="">-- Все --</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

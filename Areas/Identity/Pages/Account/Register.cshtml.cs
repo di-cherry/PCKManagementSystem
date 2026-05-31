@@ -17,18 +17,18 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailService _emailService;
+        private readonly IEmailSender _emailSender;
 
         public RegisterModel(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailService emailService)
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
-            _emailService = emailService;
+            _emailSender = emailSender;
         }
 
         [BindProperty]
@@ -63,50 +63,33 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
-
             if (ModelState.IsValid)
             {
-                var user = new User
-                {
-                    UserName = Input.Email,
-                    Email = Input.Email,
-                    IsActive = true,
-                    CreatedAt = System.DateTime.UtcNow,
-                    FullName = Input.Email 
-                };
-
+                var user = new User { UserName = Input.Email, Email = Input.Email, FullName = Input.Email };
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
-                    //// Генерация токена подтверждения
-                    //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    //var callbackUrl = Url.Page(
-                    //    "/Account/ConfirmEmail",
-                    //    pageHandler: null,
-                    //    values: new { userId = user.Id, code },
-                    //    protocol: Request.Scheme);
-
-                    //// Отправка письма через ваш EmailService
-                    //await _emailService.SendEmailAsync(Input.Email, "Подтверждение регистрации",
-                    //    $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
-
                     _logger.LogInformation("Пользователь создал новый аккаунт.");
-
-                    // Добавляем роль "Преподаватель" по умолчанию
                     await _userManager.AddToRoleAsync(user, "Преподаватель");
 
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var callbackUrl = Url.Page(
+                        "/Account/ConfirmEmail",
+                        pageHandler: null,
+                        values: new { userId = user.Id, code = code },
+                        protocol: Request.Scheme);
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
+                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
+
+                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
                 }
                 foreach (var error in result.Errors)
-                {
                     ModelState.AddModelError(string.Empty, error.Description);
-                }
             }
-
             return Page();
         }
     }
