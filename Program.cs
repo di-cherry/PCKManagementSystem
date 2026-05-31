@@ -39,7 +39,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
-/*    .AddDefaultUI()*/;
+    .AddDefaultUI();
 
 // Настройка путей для Identity
 builder.Services.ConfigureApplicationCookie(options =>
@@ -58,6 +58,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddScoped<IEmailSender<User>, IdentityEmailSender>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 

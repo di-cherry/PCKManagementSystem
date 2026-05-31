@@ -57,7 +57,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            await _emailService.SendEmailAsync(Input.Email, "Подтверждение регистрации",
+            await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
                 $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
 
             ModelState.AddModelError(string.Empty, "Письмо с подтверждением отправлено.");
