@@ -13,7 +13,9 @@ using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
-Console.OutputEncoding = Encoding.UTF8;
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.InputEncoding = System.Text.Encoding.UTF8;
+Console.WriteLine($"Текущая локаль: {System.Globalization.CultureInfo.CurrentCulture}");
 
 // Добавляем DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
