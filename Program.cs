@@ -13,6 +13,7 @@ using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
+Console.OutputEncoding = Encoding.UTF8;
 
 // Добавляем DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
