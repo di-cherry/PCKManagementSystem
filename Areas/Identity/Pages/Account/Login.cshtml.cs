@@ -23,30 +23,30 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; } = new InputModel(); // <-- ÈÍÈÖÈÀËÈÇÀÖÈß
+        public InputModel Input { get; set; } = new InputModel(); // <-- Ð˜ÐÐ˜Ð¦Ð˜ÐÐ›Ð˜Ð—ÐÐ¦Ð˜Ð¯
 
-        public string? ReturnUrl { get; set; } // <-- ÑÄÅËÀË NULLABLE (âîïðîñ)
+        public string? ReturnUrl { get; set; } // <-- Ð¡Ð”Ð•Ð›ÐÐ› NULLABLE (Ð²Ð¾Ð¿Ñ€Ð¾Ñ)
 
         [TempData]
-        public string? ErrorMessage { get; set; } // <-- ÑÄÅËÀË NULLABLE
+        public string? ErrorMessage { get; set; } // <-- Ð¡Ð”Ð•Ð›ÐÐ› NULLABLE
 
         public class InputModel
         {
-            [Required(ErrorMessage = "Email îáÿçàòåëåí")]
-            [EmailAddress(ErrorMessage = "Ââåäèòå êîððåêòíûé email")]
+            [Required(ErrorMessage = "Email Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÐµÐ½")]
+            [EmailAddress(ErrorMessage = "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ð¹ email")]
             [Display(Name = "Email")]
-            public string Email { get; set; } = string.Empty; // <-- ÈÍÈÖÈÀËÈÇÀÖÈß
+            public string Email { get; set; } = string.Empty; // <-- Ð˜ÐÐ˜Ð¦Ð˜ÐÐ›Ð˜Ð—ÐÐ¦Ð˜Ð¯
 
-            [Required(ErrorMessage = "Ïàðîëü îáÿçàòåëåí")]
+            [Required(ErrorMessage = "ÐŸÐ°Ñ€Ð¾Ð»ÑŒ Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÐµÐ½")]
             [DataType(DataType.Password)]
-            [Display(Name = "Ïàðîëü")]
-            public string Password { get; set; } = string.Empty; // <-- ÈÍÈÖÈÀËÈÇÀÖÈß
+            [Display(Name = "ÐŸÐ°Ñ€Ð¾Ð»ÑŒ")]
+            public string Password { get; set; } = string.Empty; // <-- Ð˜ÐÐ˜Ð¦Ð˜ÐÐ›Ð˜Ð—ÐÐ¦Ð˜Ð¯
 
-            [Display(Name = "Çàïîìíèòü ìåíÿ?")]
+            [Display(Name = "Ð—Ð°Ð¿Ð¾Ð¼Ð½Ð¸Ñ‚ÑŒ Ð¼ÐµÐ½Ñ?")]
             public bool RememberMe { get; set; }
         }
 
-        public async Task OnGetAsync(string? returnUrl = null) // <-- NULLABLE ÏÀÐÀÌÅÒÐ
+        public async Task OnGetAsync(string? returnUrl = null) // <-- NULLABLE ÐŸÐÐ ÐÐœÐ•Ð¢Ð 
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
@@ -60,7 +60,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> OnPostAsync(string? returnUrl = null) // <-- NULLABLE ÏÀÐÀÌÅÒÐ
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null) // <-- NULLABLE ÐŸÐÐ ÐÐœÐ•Ð¢Ð 
         {
             returnUrl ??= Url.Content("~/");
 
@@ -69,7 +69,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Ïîëüçîâàòåëü âîøåë â ñèñòåìó.");
+                    _logger.LogInformation("ÐŸÐ¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒ Ð²Ð¾ÑˆÐµÐ» Ð² ÑÐ¸ÑÑ‚ÐµÐ¼Ñƒ.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -78,12 +78,12 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("Àêêàóíò çàáëîêèðîâàí.");
+                    _logger.LogWarning("ÐÐºÐºÐ°ÑƒÐ½Ñ‚ Ð·Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½.");
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Íåóäà÷íàÿ ïîïûòêà âõîäà.");
+                    ModelState.AddModelError(string.Empty, "ÐÐµÑƒÐ´Ð°Ñ‡Ð½Ð°Ñ Ð¿Ð¾Ð¿Ñ‹Ñ‚ÐºÐ° Ð²Ñ…Ð¾Ð´Ð°.");
                     return Page();
                 }
             }

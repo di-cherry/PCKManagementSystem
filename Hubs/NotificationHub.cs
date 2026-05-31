@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging; // если используете ILogger
 
 namespace PCKManagementSystem.Hubs

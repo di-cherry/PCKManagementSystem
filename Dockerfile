@@ -2,14 +2,15 @@
 
 # Этот этап используется при запуске из VS в быстром режиме (по умолчанию для конфигурации отладки)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-RUN apt-get update && apt-get install -y locales locales-all
-ENV LANG ru_RU.UTF-8
-ENV LANGUAGE ru_RU:ru
-ENV LC_ALL ru_RU.UTF-8
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+# Установка русской локали
+RUN apt-get update && apt-get install -y locales locales-all && rm -rf /var/lib/apt/lists/*
+ENV LANG ru_RU.UTF-8
+ENV LANGUAGE ru_RU:ru
+ENV LC_ALL ru_RU.UTF-8
 
 # Этот этап используется для сборки проекта службы
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build

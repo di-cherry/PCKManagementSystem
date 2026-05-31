@@ -13,16 +13,22 @@ using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
-Console.OutputEncoding = System.Text.Encoding.UTF8;
-Console.InputEncoding = System.Text.Encoding.UTF8;
-Console.WriteLine($"Текущая локаль: {System.Globalization.CultureInfo.CurrentCulture}");
 
-// Добавляем DbContext
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
+// Р РµРіРёСЃС‚СЂР°С†РёСЏ РєРѕРґРѕРІС‹С… СЃС‚СЂР°РЅРёС† РґР»СЏ РїРѕРґРґРµСЂР¶РєРё РєРёСЂРёР»Р»РёС†С‹
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// РЈСЃС‚Р°РЅРѕРІРєР° СЂСѓСЃСЃРєРѕР№ РєСѓР»СЊС‚СѓСЂС‹ РґР»СЏ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ РґР°С‚, С‡РёСЃРµР» Рё С‚.Рґ.
+var cultureInfo = new System.Globalization.CultureInfo("ru-RU");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+// Р”РѕР±Р°РІР»СЏРµРј DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Добавляем Identity
+// Р”РѕР±Р°РІР»СЏРµРј Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.Password.RequireDigit = false;
@@ -44,7 +50,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     .AddDefaultTokenProviders()
     .AddDefaultUI();
 
-// Настройка путей для Identity
+// РќР°СЃС‚СЂРѕР№РєР° РїСѓС‚РµР№ РґР»СЏ Identity
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -67,17 +73,17 @@ builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 var app = builder.Build();
 
-// Поддержка заголовков X-Forwarded-* от Amvera
+// РџРѕРґРґРµСЂР¶РєР° Р·Р°РіРѕР»РѕРІРєРѕРІ X-Forwarded-* РѕС‚ Amvera
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
-// Настройка лицензии EPPlus для некоммерческого использования
+// РќР°СЃС‚СЂРѕР№РєР° Р»РёС†РµРЅР·РёРё EPPlus РґР»СЏ РЅРµРєРѕРјРјРµСЂС‡РµСЃРєРѕРіРѕ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
 ExcelPackage.License.SetNonCommercialPersonal("EducationalProject");
 QuestPDF.Settings.License = LicenseType.Community;
 
-// ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// РРќРР¦РРђР›РР—РђР¦РРЇ Р‘РђР—Р« Р”РђРќРќР«РҐ - РРЎРџР РђР’Р›Р•РќРќРђРЇ Р’Р•Р РЎРРЇ
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -85,20 +91,20 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
 
-        // ВАЖНО: Применяем миграции, если они есть
+        // Р’РђР–РќРћ: РџСЂРёРјРµРЅСЏРµРј РјРёРіСЂР°С†РёРё, РµСЃР»Рё РѕРЅРё РµСЃС‚СЊ
         await context.Database.MigrateAsync();
-        Console.WriteLine("Миграции применены успешно");
+        Console.WriteLine("РњРёРіСЂР°С†РёРё РїСЂРёРјРµРЅРµРЅС‹ СѓСЃРїРµС€РЅРѕ");
 
-        // Теперь инициализируем данные
+        // РўРµРїРµСЂСЊ РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РґР°РЅРЅС‹Рµ
         await DbInitializer.InitializeAsync(services);
-        Console.WriteLine("База данных успешно инициализирована");
+        Console.WriteLine("Р‘Р°Р·Р° РґР°РЅРЅС‹С… СѓСЃРїРµС€РЅРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅР°");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ошибка при инициализации базы данных.");
-        Console.WriteLine($"ОШИБКА: {ex.Message}");
-        Console.WriteLine($"СТЕК: {ex.StackTrace}");
+        logger.LogError(ex, "РћС€РёР±РєР° РїСЂРё РёРЅРёС†РёР°Р»РёР·Р°С†РёРё Р±Р°Р·С‹ РґР°РЅРЅС‹С….");
+        Console.WriteLine($"РћРЁРР‘РљРђ: {ex.Message}");
+        Console.WriteLine($"РЎРўР•Рљ: {ex.StackTrace}");
     }
 }
 
@@ -121,6 +127,14 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+var options = new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Content-Type", "text/html; charset=utf-8");
+    }
+};
+app.UseStaticFiles(options);
 app.UseRouting();
 
 app.UseAuthentication();

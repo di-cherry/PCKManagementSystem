@@ -1,4 +1,4 @@
-﻿namespace PCKManagementSystem.Hubs
+namespace PCKManagementSystem.Hubs
 {
     public interface IEmailSender
     {

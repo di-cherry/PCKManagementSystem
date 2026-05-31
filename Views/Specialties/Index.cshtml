@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PCKManagementSystem.Models.Specialty>
+@model IEnumerable<PCKManagementSystem.Models.Specialty>
 @{
     ViewData["Title"] = "Специальности";
     var isChairmanOrAdmin = User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК");

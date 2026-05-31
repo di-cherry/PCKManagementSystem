@@ -40,13 +40,13 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "Пользователь не найден.");
+                ModelState.AddModelError(string.Empty, "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ.");
                 return Page();
             }
 
             if (await _userManager.IsEmailConfirmedAsync(user))
             {
-                ModelState.AddModelError(string.Empty, "Email уже подтверждён.");
+                ModelState.AddModelError(string.Empty, "Email СѓР¶Рµ РїРѕРґС‚РІРµСЂР¶РґС‘РЅ.");
                 return Page();
             }
 
@@ -57,10 +57,10 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
-                $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
+            await _emailSender.SendEmailAsync(Input.Email, "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СЂРµРіРёСЃС‚СЂР°С†РёРё",
+                $"РџРѕРґС‚РІРµСЂРґРёС‚Рµ СЂРµРіРёСЃС‚СЂР°С†РёСЋ, РїРµСЂРµР№РґСЏ РїРѕ СЃСЃС‹Р»РєРµ: <a href='{callbackUrl}'>РџРѕРґС‚РІРµСЂРґРёС‚СЊ</a>");
 
-            ModelState.AddModelError(string.Empty, "Письмо с подтверждением отправлено.");
+            ModelState.AddModelError(string.Empty, "РџРёСЃСЊРјРѕ СЃ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµРј РѕС‚РїСЂР°РІР»РµРЅРѕ.");
             return Page();
         }
     }

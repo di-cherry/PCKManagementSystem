@@ -25,12 +25,12 @@ namespace PCKManagementSystem.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                // Для авторизованных пользователей показываем дашборд
+                // Р”Р»СЏ Р°РІС‚РѕСЂРёР·РѕРІР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ РїРѕРєР°Р·С‹РІР°РµРј РґР°С€Р±РѕСЂРґ
                 var viewModel = await GetDashboardViewModel();
                 return View("Dashboard", viewModel);
             }
 
-            // Для неавторизованных - лендинг
+            // Р”Р»СЏ РЅРµР°РІС‚РѕСЂРёР·РѕРІР°РЅРЅС‹С… - Р»РµРЅРґРёРЅРі
             var landingViewModel = new LandingPageViewModel
             {
                 TotalUsers = await _context.Users.CountAsync(),
@@ -50,21 +50,21 @@ namespace PCKManagementSystem.Controllers
 
         public IActionResult About()
         {
-            ViewData["Title"] = "О системе";
+            ViewData["Title"] = "Рћ СЃРёСЃС‚РµРјРµ";
 
             var model = new AboutViewModel
             {
-                SystemName = "АИС ПЦК",
+                SystemName = "РђРРЎ РџР¦Рљ",
                 Version = "1.0.0",
-                Description = "Автоматизированная информационная система для организации учебно-методической работы предметно-цикловой комиссии колледжа",
+                Description = "РђРІС‚РѕРјР°С‚РёР·РёСЂРѕРІР°РЅРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёРѕРЅРЅР°СЏ СЃРёСЃС‚РµРјР° РґР»СЏ РѕСЂРіР°РЅРёР·Р°С†РёРё СѓС‡РµР±РЅРѕ-РјРµС‚РѕРґРёС‡РµСЃРєРѕР№ СЂР°Р±РѕС‚С‹ РїСЂРµРґРјРµС‚РЅРѕ-С†РёРєР»РѕРІРѕР№ РєРѕРјРёСЃСЃРёРё РєРѕР»Р»РµРґР¶Р°",
                 Features = new List<string>
         {
-            "Управление учебно-методической документацией",
-            "Учет учебной нагрузки преподавателей",
-            "Система задач и поручений",
-            "Формирование отчетности",
-            "Журнал аудита действий пользователей",
-            "Разграничение прав доступа"
+            "РЈРїСЂР°РІР»РµРЅРёРµ СѓС‡РµР±РЅРѕ-РјРµС‚РѕРґРёС‡РµСЃРєРѕР№ РґРѕРєСѓРјРµРЅС‚Р°С†РёРµР№",
+            "РЈС‡РµС‚ СѓС‡РµР±РЅРѕР№ РЅР°РіСЂСѓР·РєРё РїСЂРµРїРѕРґР°РІР°С‚РµР»РµР№",
+            "РЎРёСЃС‚РµРјР° Р·Р°РґР°С‡ Рё РїРѕСЂСѓС‡РµРЅРёР№",
+            "Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РѕС‚С‡РµС‚РЅРѕСЃС‚Рё",
+            "Р–СѓСЂРЅР°Р» Р°СѓРґРёС‚Р° РґРµР№СЃС‚РІРёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№",
+            "Р Р°Р·РіСЂР°РЅРёС‡РµРЅРёРµ РїСЂР°РІ РґРѕСЃС‚СѓРїР°"
         },
                 Technologies = new List<string>
         {
@@ -74,7 +74,7 @@ namespace PCKManagementSystem.Controllers
             "Bootstrap 5",
             "ASP.NET Core Identity"
         },
-                Developer = "Студент(ка) группы ...",
+                Developer = "РЎС‚СѓРґРµРЅС‚(РєР°) РіСЂСѓРїРїС‹ ...",
                 Year = DateTime.UtcNow.Year
             };
 
@@ -86,27 +86,27 @@ namespace PCKManagementSystem.Controllers
             var userId = GetCurrentUserId();
             var user = await _context.Users.FindAsync(userId);
 
-            // ===== НОВЫЙ КОД: данные для графика за последние 12 месяцев =====
+            // ===== РќРћР’Р«Р™ РљРћР”: РґР°РЅРЅС‹Рµ РґР»СЏ РіСЂР°С„РёРєР° Р·Р° РїРѕСЃР»РµРґРЅРёРµ 12 РјРµСЃСЏС†РµРІ =====
             var today = DateTime.UtcNow.Date;
             var startDate = today.AddMonths(-11);
             var startOfMonth = new DateTime(startDate.Year, startDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             //var startOfMonth = new DateTime(startDate.Year, startDate.Month, 1);
 
-            // Группировка документов по месяцам
+            // Р“СЂСѓРїРїРёСЂРѕРІРєР° РґРѕРєСѓРјРµРЅС‚РѕРІ РїРѕ РјРµСЃСЏС†Р°Рј
             var docsByMonth = await _context.Documents
                 .Where(d => d.CreatedAt >= startOfMonth)
                 .GroupBy(d => new { d.CreatedAt.Year, d.CreatedAt.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .ToDictionaryAsync(x => $"{x.Year}-{x.Month:00}", x => x.Count);
 
-            // Группировка всех задач по месяцам (по дате срока)
+            // Р“СЂСѓРїРїРёСЂРѕРІРєР° РІСЃРµС… Р·Р°РґР°С‡ РїРѕ РјРµСЃСЏС†Р°Рј (РїРѕ РґР°С‚Рµ СЃСЂРѕРєР°)
             var tasksByMonth = await _context.Tasks
                 .Where(t => t.DueDate >= startOfMonth)
                 .GroupBy(t => new { t.DueDate.Year, t.DueDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .ToDictionaryAsync(x => $"{x.Year}-{x.Month:00}", x => x.Count);
 
-            // Группировка выполненных задач по месяцам
+            // Р“СЂСѓРїРїРёСЂРѕРІРєР° РІС‹РїРѕР»РЅРµРЅРЅС‹С… Р·Р°РґР°С‡ РїРѕ РјРµСЃСЏС†Р°Рј
             var completedTasksByMonth = await _context.Tasks
                 .Where(t => t.Status == Models.TaskStatus.Completed && t.DueDate >= startOfMonth)
                 .GroupBy(t => new { t.DueDate.Year, t.DueDate.Month })
@@ -130,8 +130,8 @@ namespace PCKManagementSystem.Controllers
 
             var viewModel = new DashboardViewModel
             {
-                // ... присвоение всех существующих свойств ...
-                UserName = user?.FullName ?? user?.Email ?? "Пользователь",
+                // ... РїСЂРёСЃРІРѕРµРЅРёРµ РІСЃРµС… СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… СЃРІРѕР№СЃС‚РІ ...
+                UserName = user?.FullName ?? user?.Email ?? "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ",
                 UserRole = GetUserRole(),
                 TotalDocuments = await _context.Documents.CountAsync(),
                 TotalTasks = await _context.Tasks.CountAsync(),
@@ -170,7 +170,7 @@ namespace PCKManagementSystem.Controllers
                     .OrderBy(t => t.DueDate)
                     .Take(3)
                     .ToListAsync(),
-                // Новые поля
+                // РќРѕРІС‹Рµ РїРѕР»СЏ
                 Months = months,
                 DocumentsCreated = docsCount,
                 TasksCreated = tasksCount,
@@ -182,8 +182,8 @@ namespace PCKManagementSystem.Controllers
 
         private async Task<List<DisciplineProgressViewModel>> GetDisciplineProgress(int userId)
         {
-            // Для преподавателя — прогресс по его документам в разрезе дисциплин
-            // Если администратор/председатель — можно показывать общую статистику или по всем дисциплинам
+            // Р”Р»СЏ РїСЂРµРїРѕРґР°РІР°С‚РµР»СЏ вЂ” РїСЂРѕРіСЂРµСЃСЃ РїРѕ РµРіРѕ РґРѕРєСѓРјРµРЅС‚Р°Рј РІ СЂР°Р·СЂРµР·Рµ РґРёСЃС†РёРїР»РёРЅ
+            // Р•СЃР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ/РїСЂРµРґСЃРµРґР°С‚РµР»СЊ вЂ” РјРѕР¶РЅРѕ РїРѕРєР°Р·С‹РІР°С‚СЊ РѕР±С‰СѓСЋ СЃС‚Р°С‚РёСЃС‚РёРєСѓ РёР»Рё РїРѕ РІСЃРµРј РґРёСЃС†РёРїР»РёРЅР°Рј
             var query = _context.Documents
                 .Where(d => d.AuthorId == userId)
                 .GroupBy(d => d.DisciplineId)
@@ -207,20 +207,20 @@ namespace PCKManagementSystem.Controllers
 
         private string GetUserRole()
         {
-            if (User.IsInRole("Администратор")) return "Администратор";
-            if (User.IsInRole("Председатель ПЦК")) return "Председатель ПЦК";
-            if (User.IsInRole("Преподаватель")) return "Преподаватель";
-            return "Пользователь";
+            if (User.IsInRole("РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ")) return "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ";
+            if (User.IsInRole("РџСЂРµРґСЃРµРґР°С‚РµР»СЊ РџР¦Рљ")) return "РџСЂРµРґСЃРµРґР°С‚РµР»СЊ РџР¦Рљ";
+            if (User.IsInRole("РџСЂРµРїРѕРґР°РІР°С‚РµР»СЊ")) return "РџСЂРµРїРѕРґР°РІР°С‚РµР»СЊ";
+            return "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ";
         }
 
         public IActionResult Privacy()
         {
-            ViewData["Title"] = "Политика конфиденциальности";
+            ViewData["Title"] = "РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё";
 
             var model = new PrivacyViewModel
             {
                 LastUpdated = new DateTime(2026, 1, 1),
-                CompanyName = "АИС ПЦК",
+                CompanyName = "РђРРЎ РџР¦Рљ",
                 Email = "privacy@pck.ru"
             };
 

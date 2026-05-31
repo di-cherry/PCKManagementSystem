@@ -25,10 +25,10 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound($"Пользователь с ID '{userId}' не найден.");
+                return NotFound($"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ ID '{userId}' РЅРµ РЅР°Р№РґРµРЅ.");
 
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            StatusMessage = result.Succeeded ? "Спасибо за подтверждение email." : "Ошибка подтверждения email.";
+            StatusMessage = result.Succeeded ? "РЎРїР°СЃРёР±Рѕ Р·Р° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ email." : "РћС€РёР±РєР° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ email.";
             return Page();
         }
     }

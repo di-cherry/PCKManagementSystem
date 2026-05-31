@@ -40,23 +40,23 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required(ErrorMessage = "Email обязателен")]
-            [EmailAddress(ErrorMessage = "Введите корректный email")]
-            [AllowedEmailDomain("edu.fa.ru", ErrorMessage = "Регистрация доступна только для корпоративной почты edu.fa.ru")]
+            [Required(ErrorMessage = "Email РѕР±СЏР·Р°С‚РµР»РµРЅ")]
+            [EmailAddress(ErrorMessage = "Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Р№ email")]
+            [AllowedEmailDomain("edu.fa.ru", ErrorMessage = "Р РµРіРёСЃС‚СЂР°С†РёСЏ РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РєРѕСЂРїРѕСЂР°С‚РёРІРЅРѕР№ РїРѕС‡С‚С‹ edu.fa.ru")]
             [Display(Name = "Email")]
             public string Email { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "Пароль обязателен")]
-            [StringLength(100, ErrorMessage = "Пароль должен быть от {2} до {1} символов", MinimumLength = 8)]
+            [Required(ErrorMessage = "РџР°СЂРѕР»СЊ РѕР±СЏР·Р°С‚РµР»РµРЅ")]
+            [StringLength(100, ErrorMessage = "РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ {2} РґРѕ {1} СЃРёРјРІРѕР»РѕРІ", MinimumLength = 8)]
             [DataType(DataType.Password)]
-            [Display(Name = "Пароль")]
+            [Display(Name = "РџР°СЂРѕР»СЊ")]
             [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$",
-            ErrorMessage = "Пароль должен содержать хотя бы одну цифру, одну заглавную и одну строчную буквы, а также один спецсимвол")]
+            ErrorMessage = "РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ С…РѕС‚СЏ Р±С‹ РѕРґРЅСѓ С†РёС„СЂСѓ, РѕРґРЅСѓ Р·Р°РіР»Р°РІРЅСѓСЋ Рё РѕРґРЅСѓ СЃС‚СЂРѕС‡РЅСѓСЋ Р±СѓРєРІС‹, Р° С‚Р°РєР¶Рµ РѕРґРёРЅ СЃРїРµС†СЃРёРјРІРѕР»")]
             public string Password { get; set; } = string.Empty;
 
             [DataType(DataType.Password)]
-            [Display(Name = "Подтверждение пароля")]
-            [Compare("Password", ErrorMessage = "Пароли не совпадают")]
+            [Display(Name = "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РїР°СЂРѕР»СЏ")]
+            [Compare("Password", ErrorMessage = "РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚")]
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
@@ -74,15 +74,15 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Пользователь создал новый аккаунт.");
-                    var role = await _roleManager.FindByNameAsync("Преподаватель");
+                    _logger.LogInformation("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃРѕР·РґР°Р» РЅРѕРІС‹Р№ Р°РєРєР°СѓРЅС‚.");
+                    var role = await _roleManager.FindByNameAsync("РџСЂРµРїРѕРґР°РІР°С‚РµР»СЊ");
                     if (role != null)
                     {
                         await _userManager.AddToRoleAsync(user, role.Name);
                     }
                     else
                     {
-                        _logger.LogWarning("Роль 'Преподаватель' не найдена в базе данных.");
+                        _logger.LogWarning("Р РѕР»СЊ 'РџСЂРµРїРѕРґР°РІР°С‚РµР»СЊ' РЅРµ РЅР°Р№РґРµРЅР° РІ Р±Р°Р·Рµ РґР°РЅРЅС‹С….");
                     }
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -92,8 +92,8 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                         values: new { userId = user.Id, code = code },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
-                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
+                    await _emailSender.SendEmailAsync(Input.Email, "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СЂРµРіРёСЃС‚СЂР°С†РёРё",
+                        $"РџРѕРґС‚РІРµСЂРґРёС‚Рµ СЂРµРіРёСЃС‚СЂР°С†РёСЋ, РїРµСЂРµР№РґСЏ РїРѕ СЃСЃС‹Р»РєРµ: <a href='{callbackUrl}'>РџРѕРґС‚РІРµСЂРґРёС‚СЊ</a>");
 
                     return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
                 }

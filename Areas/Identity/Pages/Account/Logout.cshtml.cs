@@ -20,10 +20,10 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             _logger = logger;
         }
 
-        public async Task<IActionResult> OnPost(string? returnUrl = null) // <-- NULLABLE ÏÀÐÀÌÅÒÐ
+        public async Task<IActionResult> OnPost(string? returnUrl = null) // <-- NULLABLE ÐŸÐÐ ÐÐœÐ•Ð¢Ð 
         {
             await _signInManager.SignOutAsync();
-            _logger.LogInformation("Ïîëüçîâàòåëü âûøåë èç ñèñòåìû.");
+            _logger.LogInformation("ÐŸÐ¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒ Ð²Ñ‹ÑˆÐµÐ» Ð¸Ð· ÑÐ¸ÑÑ‚ÐµÐ¼Ñ‹.");
 
             if (returnUrl != null)
             {
@@ -31,7 +31,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             }
             else
             {
-                // Èñïðàâëÿåì ïðåäóïðåæäåíèå - ïåðåäàåì êîíêðåòíûé URL
+                // Ð˜ÑÐ¿Ñ€Ð°Ð²Ð»ÑÐµÐ¼ Ð¿Ñ€ÐµÐ´ÑƒÐ¿Ñ€ÐµÐ¶Ð´ÐµÐ½Ð¸Ðµ - Ð¿ÐµÑ€ÐµÐ´Ð°ÐµÐ¼ ÐºÐ¾Ð½ÐºÑ€ÐµÑ‚Ð½Ñ‹Ð¹ URL
                 return LocalRedirect(Url.Content("~/"));
             }
         }
