@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace PCKManagementSystem.Models
 {
@@ -14,7 +14,7 @@ namespace PCKManagementSystem.Models
         public int AssignedToId { get; set; }  // Кому
         public int AssignedById { get; set; }  // Кто поставил
         
-        // Новое поле для прикрепления файла (путь к файлу в папке uploads/tasks)
+        // Новое поле для прикрепления файла
         public string? AttachmentFilePath { get; set; }
         public string? AttachmentFileName { get; set; }  // оригинальное имя для отображения
 

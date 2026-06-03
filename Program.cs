@@ -83,7 +83,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 ExcelPackage.License.SetNonCommercialPersonal("EducationalProject");
 QuestPDF.Settings.License = LicenseType.Community;
 
-// ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// Инициализация базы данных
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -118,7 +118,6 @@ else
     app.UseHsts();
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

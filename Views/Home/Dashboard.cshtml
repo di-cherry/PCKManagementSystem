@@ -15,7 +15,7 @@
     <div class="dashboard-grid">
         <!-- Основная колонка (левая) -->
         <div class="main-column">
-            <!-- Приветственный блок (как в LexieLingua) -->
+            <!-- Приветственный блок -->
             <div class="welcome-modern animate__animated animate__fadeIn">
                 <div class="welcome-text">
                     <h2>Здравствуйте, @Model.UserName! 👋</h2>
@@ -78,7 +78,7 @@
                 </div>
             </div>
 
-            <!-- Последние документы (карточки, а не список) -->
+            <!-- Последние документы (карточки) -->
             <div class="content-card">
                 <div class="card-header-custom">
                     <h5><i class="bi bi-files me-2"></i>Последние документы</h5>
@@ -161,7 +161,7 @@
 
         <!-- Боковая колонка (правая) -->
         <div class="sidebar-column">
-            <!-- Активные задачи (виджет как в e-Learning) -->
+            <!-- Активные задачи -->
             <div class="sidebar-card">
                 <div class="sidebar-card-header">
                     <h6><i class="bi bi-check2-square me-2"></i>Активные задачи</h6>
@@ -200,7 +200,7 @@
                 </div>
             </div>
 
-            <!-- Объявления (компактно) -->
+            <!-- Объявления -->
             @if (Model.Announcements.Any())
             {
                 <div class="sidebar-card">
@@ -251,7 +251,7 @@
         </div>
     </div>
 
-    <!-- Быстрые действия (внизу на всю ширину) -->
+    <!-- Быстрые действия -->
     <div class="quick-actions-card">
         <div class="quick-actions-header">
             <h6><i class="bi bi-lightning me-2"></i>Быстрые действия</h6>
@@ -289,7 +289,6 @@
 </div>
 
 @functions {
-    // Те же вспомогательные методы, что были у вас
     private string GetStatusDisplay(DocumentStatus status) => status switch
     {
         DocumentStatus.Draft => "Черновик",
@@ -328,7 +327,6 @@
         _ => "bg-secondary"
     };
 
-    // Новый метод для точки статуса задачи (для боковой панели)
     private string GetTaskStatusDotClass(PCKManagementSystem.Models.TaskStatus status) => status switch
     {
         PCKManagementSystem.Models.TaskStatus.Pending => "status-pending",

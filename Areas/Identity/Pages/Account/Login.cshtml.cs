@@ -23,30 +23,30 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; } = new InputModel(); // <-- ИНИЦИАЛИЗАЦИЯ
+        public InputModel Input { get; set; } = new InputModel(); 
 
-        public string? ReturnUrl { get; set; } // <-- СДЕЛАЛ NULLABLE (вопрос)
+        public string? ReturnUrl { get; set; } 
 
         [TempData]
-        public string? ErrorMessage { get; set; } // <-- СДЕЛАЛ NULLABLE
+        public string? ErrorMessage { get; set; } 
 
         public class InputModel
         {
             [Required(ErrorMessage = "Email обязателен")]
             [EmailAddress(ErrorMessage = "Введите корректный email")]
             [Display(Name = "Email")]
-            public string Email { get; set; } = string.Empty; // <-- ИНИЦИАЛИЗАЦИЯ
+            public string Email { get; set; } = string.Empty; 
 
             [Required(ErrorMessage = "Пароль обязателен")]
             [DataType(DataType.Password)]
             [Display(Name = "Пароль")]
-            public string Password { get; set; } = string.Empty; // <-- ИНИЦИАЛИЗАЦИЯ
+            public string Password { get; set; } = string.Empty; 
 
             [Display(Name = "Запомнить меня?")]
             public bool RememberMe { get; set; }
         }
 
-        public async Task OnGetAsync(string? returnUrl = null) // <-- NULLABLE ПАРАМЕТР
+        public async Task OnGetAsync(string? returnUrl = null) 
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
@@ -60,7 +60,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> OnPostAsync(string? returnUrl = null) // <-- NULLABLE ПАРАМЕТР
+        public async Task<IActionResult> OnPostAsync(string? returnUrl = null) 
         {
             returnUrl ??= Url.Content("~/");
 

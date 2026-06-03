@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace PCKManagementSystem.Models
@@ -11,7 +11,7 @@ namespace PCKManagementSystem.Models
         public string AcademicYear { get; set; }
         public int Semester { get; set; }
 
-        // Новое поле: дополнительные часы (для консультаций, экзаменов и т.п.)
+        // Дополнительные часы (для консультаций, экзаменов и т.п.)
         public int AdditionalHours { get; set; } = 0;
 
         // Итоговые часы = Hours * GroupsCount + AdditionalHours

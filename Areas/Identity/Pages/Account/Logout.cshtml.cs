@@ -20,7 +20,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             _logger = logger;
         }
 
-        public async Task<IActionResult> OnPost(string? returnUrl = null) // <-- NULLABLE ПАРАМЕТР
+        public async Task<IActionResult> OnPost(string? returnUrl = null) 
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("Пользователь вышел из системы.");

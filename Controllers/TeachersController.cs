@@ -157,7 +157,7 @@ namespace PCKManagementSystem.Controllers
 
                 user.FullName = model.FullName;
                 user.Email = model.Email;
-                user.UserName = model.Email; // если UserName = Email
+                user.UserName = model.Email; 
                 user.Position = model.Position;
                 user.Degree = model.Degree;
                 user.AcademicTitle = model.AcademicTitle;

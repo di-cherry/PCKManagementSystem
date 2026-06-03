@@ -59,8 +59,8 @@ namespace PCKManagementSystem.Controllers
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = Request.Headers["User-Agent"].ToString(),
                 ActionDate = DateTime.UtcNow,
-                AdditionalInfo = string.Empty, // <-- Добавьте эту строку!
-                OldValuesJson = string.Empty,   // <-- Добавьте эти поля, если они тоже NOT NULL
+                AdditionalInfo = string.Empty, 
+                OldValuesJson = string.Empty,   
                 NewValuesJson = string.Empty
             };
 
@@ -126,7 +126,7 @@ namespace PCKManagementSystem.Controllers
                 ["Отменены"] = await _context.Tasks.CountAsync(t => t.Status == Models.TaskStatus.Cancelled)
             };
 
-            // ИСПРАВЛЕНО: Самые активные пользователи
+            // Самые активные пользователи
             var activeUsers = await _context.Users
                 .Where(u => u.IsActive)
                 .Select(u => new
@@ -153,7 +153,7 @@ namespace PCKManagementSystem.Controllers
                 .Take(5)
                 .ToList();
 
-            // ИСПРАВЛЕНО: Последние действия
+            // Последние действия
             var recentLogs = await _context.AuditLogs
                 .OrderByDescending(a => a.ActionDate)
                 .Take(10)
@@ -735,7 +735,7 @@ namespace PCKManagementSystem.Controllers
                 await _context.SaveChangesAsync();
 
                 var message = $"Новое объявление: «{model.Title}»";
-                var url = Url.Action("Index", "Home"); // главная страница, где отображаются объявления
+                var url = Url.Action("Index", "Home"); 
 
                 await _hubContext.Clients.All.SendAsync("ReceiveNotification", message, url);
 
@@ -836,7 +836,7 @@ namespace PCKManagementSystem.Controllers
 
             var users = await usersQuery.ToListAsync();
 
-            // Фильтр по роли (выполняется в памяти, т.к. роли не хранятся в таблице Users)
+            // Фильтр по роли 
             if (!string.IsNullOrEmpty(role))
             {
                 var filteredUsers = new List<User>();

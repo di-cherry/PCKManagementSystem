@@ -95,7 +95,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                     await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
                         $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
 
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
+                    return RedirectToPage("ResendEmailConfirmation", new { email = Input.Email, returnUrl });
                 }
                 foreach (var error in result.Errors)
                     ModelState.AddModelError(string.Empty, error.Description);

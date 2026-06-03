@@ -86,7 +86,7 @@ namespace PCKManagementSystem.Controllers
             var userId = GetCurrentUserId();
             var user = await _context.Users.FindAsync(userId);
 
-            // ===== НОВЫЙ КОД: данные для графика за последние 12 месяцев =====
+            // данные для графика за последние 12 месяцев
             var today = DateTime.UtcNow.Date;
             var startDate = today.AddMonths(-11);
             var startOfMonth = new DateTime(startDate.Year, startDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -99,7 +99,7 @@ namespace PCKManagementSystem.Controllers
                 .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .ToDictionaryAsync(x => $"{x.Year}-{x.Month:00}", x => x.Count);
 
-            // Группировка всех задач по месяцам (по дате срока)
+            // Группировка всех задач по месяцам 
             var tasksByMonth = await _context.Tasks
                 .Where(t => t.DueDate >= startOfMonth)
                 .GroupBy(t => new { t.DueDate.Year, t.DueDate.Month })
@@ -130,7 +130,7 @@ namespace PCKManagementSystem.Controllers
 
             var viewModel = new DashboardViewModel
             {
-                // ... присвоение всех существующих свойств ...
+                //присвоение всех существующих свойств
                 UserName = user?.FullName ?? user?.Email ?? "Пользователь",
                 UserRole = GetUserRole(),
                 TotalDocuments = await _context.Documents.CountAsync(),

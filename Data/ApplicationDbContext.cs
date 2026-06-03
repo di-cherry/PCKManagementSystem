@@ -11,8 +11,6 @@ namespace PCKManagementSystem.Data
             : base(options)
         {
         }
-
-        // Убираем DbSet<Role> - его больше нет!
         public DbSet<Specialty> Specialties { get; set; }
         public DbSet<Discipline> Disciplines { get; set; }
         public DbSet<Document> Documents { get; set; }
@@ -26,7 +24,6 @@ namespace PCKManagementSystem.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Переименовываем таблицы Identity для красоты (опционально)
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
             modelBuilder.Entity<IdentityUserRole<int>>().ToTable("UserRoles");
@@ -121,13 +118,12 @@ namespace PCKManagementSystem.Data
                 .HasForeignKey(a => a.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //// Seed данные (УБИРАЕМ Role, оставляем только Specialties)
-            //modelBuilder.Entity<Specialty>().HasData(
-            //    new Specialty { Id = 1, Name = "Информационные системы и программирование", Code = "09.02.07" },
-            //    new Specialty { Id = 2, Name = "Обеспечение информационной безопасности автоматизированных систем", Code = "10.02.05" },
-            //    new Specialty { Id = 3, Name = "Обеспечение информационной безопасности телекоммуникационных систем", Code = "10.02.04" },
-            //    new Specialty { Id = 4, Name = "Интеллектуальные интегрированные системы", Code = "09.02.08" }
-            //);
+            modelBuilder.Entity<Specialty>().HasData(
+                new Specialty { Id = 1, Name = "Информационные системы и программирование", Code = "09.02.07" },
+                new Specialty { Id = 2, Name = "Обеспечение информационной безопасности автоматизированных систем", Code = "10.02.05" },
+                new Specialty { Id = 3, Name = "Обеспечение информационной безопасности телекоммуникационных систем", Code = "10.02.04" },
+                new Specialty { Id = 4, Name = "Интеллектуальные интегрированные системы", Code = "09.02.08" }
+            );
         }
     }
 }

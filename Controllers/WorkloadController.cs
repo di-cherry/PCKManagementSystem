@@ -111,7 +111,7 @@ namespace PCKManagementSystem.Controllers
                     break;
             }
 
-            // Преобразование в ViewModel (как было)
+            // Преобразование в ViewModel
             var workloadList = await workloads
                 .Select(w => new WorkloadViewModel
                 {
@@ -439,7 +439,7 @@ namespace PCKManagementSystem.Controllers
         {
             return _context.Workloads.Any(e => e.Id == id);
         }
-
+        // Автоматическое установление годов
         private List<SelectListItem> GetAcademicYears(int startOffset = -2, int yearsCount = 5)
         {
             var currentYear = DateTime.Now.Year;

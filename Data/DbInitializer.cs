@@ -13,7 +13,7 @@ namespace PCKManagementSystem.Data
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
 
-            // 1. Создаем роли (работает и в PostgreSQL)
+            // 1. Создаем роли 
             Console.WriteLine("Создание ролей...");
             string[] roleNames = { "Администратор", "Председатель ПЦК", "Преподаватель" };
 
@@ -33,7 +33,7 @@ namespace PCKManagementSystem.Data
                 }
             }
 
-            // 2. Создаем администратора
+            // 2. Создаем пользователей
             Console.WriteLine("\nСоздание пользователей...");
             await CreateUserIfNotExists(userManager, "admin@pck.ru", "Admin123!", "Главный Администратор", "Администратор");
             await CreateUserIfNotExists(userManager, "chairman@pck.ru", "Chairman123!", "Петров Петр Петрович", "Председатель ПЦК");
@@ -63,7 +63,7 @@ namespace PCKManagementSystem.Data
                     FullName = fullName,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
-                    EmailConfirmed = true   // важно для RequireConfirmedEmail
+                    EmailConfirmed = true   
                 };
 
                 var result = await userManager.CreateAsync(user, password);

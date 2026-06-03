@@ -23,7 +23,6 @@ namespace PCKManagementSystem.Controllers
         }
 
         // GET: Disciplines
-        // GET: Disciplines
         public async Task<IActionResult> Index(string sortOrder, string searchString, int? specialtyId)
         {
             ViewData["CurrentSort"] = sortOrder;
@@ -194,7 +193,7 @@ namespace PCKManagementSystem.Controllers
                     _context.Update(discipline);
                     await _context.SaveChangesAsync();
 
-                    // TODO: Добавить запись в AuditLog
+                    // Добавить запись в AuditLog
                     TempData["Success"] = "Дисциплина успешно обновлена";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -267,7 +266,7 @@ namespace PCKManagementSystem.Controllers
             _context.Disciplines.Remove(discipline);
             await _context.SaveChangesAsync();
 
-            // TODO: Добавить запись в AuditLog
+            // Добавить запись в AuditLog
             TempData["Success"] = "Дисциплина успешно удалена";
 
             return RedirectToAction(nameof(Index));

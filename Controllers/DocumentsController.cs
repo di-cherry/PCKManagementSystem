@@ -428,7 +428,7 @@ namespace PCKManagementSystem.Controllers
             {
                 UserId = userId,
                 UserEmail = User.Identity?.Name ?? "Unknown",
-                UserFullName = userFullName,            // ← обязательно заполняем
+                UserFullName = userFullName,           
                 ActionType = "Отклонение",
                 ActionDescription = $"Отклонен документ '{document.Name}'",
                 EntityType = "Document",
@@ -443,7 +443,7 @@ namespace PCKManagementSystem.Controllers
             _context.AuditLogs.Add(auditLog);
             await _context.SaveChangesAsync();
 
-            // *** ОТПРАВКА УВЕДОМЛЕНИЯ ***
+            // ОТПРАВКА УВЕДОМЛЕНИЯ 
             // Формируем сообщение и URL
             var message = $"Ваш документ «{document.Name}» отклонён. Причина: {comment}";
             var url = Url.Action("Details", "Documents", new { id = document.Id }); // ссылка на детали документа

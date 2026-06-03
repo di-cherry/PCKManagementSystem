@@ -1,4 +1,4 @@
-﻿namespace PCKManagementSystem.Models.ViewModels
+namespace PCKManagementSystem.Models.ViewModels
 {
     public class DisciplineImportPreviewViewModel
     {

@@ -21,7 +21,7 @@
         <nav class="navbar navbar-light bg-white border-bottom py-2">
             <div class="container-fluid">
                 <div class="d-flex align-items-center">
-                    <!-- Кнопка-бургер ТОЛЬКО для авторизованных -->
+                    <!-- Кнопка-бургер для авторизованных -->
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <button class="btn btn-outline-primary me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
@@ -37,7 +37,7 @@
             </div>
         </nav>
 
-        <!-- Offcanvas меню ТОЛЬКО для авторизованных -->
+        <!-- Offcanvas меню для авторизованных -->
         @if (User.Identity?.IsAuthenticated == true)
         {
             <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">

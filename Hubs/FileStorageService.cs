@@ -14,7 +14,7 @@ namespace PCKManagementSystem.Hubs
         {
             _env = env;
             _hostEnv = hostEnv;
-            // Определяем базовый путь: если среда разработки, используем wwwroot, иначе /data
+            // Базовый путь: если среда разработки, используем wwwroot, иначе /data
             if (_hostEnv.IsDevelopment())
                 _basePath = Path.Combine(_env.WebRootPath, "uploads");
             else
