@@ -68,8 +68,10 @@ namespace PCKManagementSystem.Controllers
                 .Include(t => t.AssignedBy)
                 .AsQueryable();
 
-            if (User.IsInRole("Преподаватель") && !User.IsInRole("Администратор") && !User.IsInRole("Председатель ПЦК"))
+            if (!User.IsInRole("Администратор") && !User.IsInRole("Председатель ПЦК"))
+            {
                 query = query.Where(t => t.AssignedToId == userId || t.AssignedById == userId);
+            }
 
             if (filter.Status.HasValue)
                 query = query.Where(t => t.Status == (TaskStatus)filter.Status.Value);
@@ -135,7 +137,6 @@ namespace PCKManagementSystem.Controllers
         }
 
         // GET: Tasks/MyTasks
-        [Authorize(Roles = "Преподаватель")]
         public async Task<IActionResult> MyTasks()
         {
             var userId = GetCurrentUserId();

@@ -32,7 +32,15 @@
                         <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Повторите пароль" type="password" />
                         <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                     </div>
-
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input asp-for="Input.AgreeToTerms" class="form-check-input" />
+                            <label asp-for="Input.AgreeToTerms" class="form-check-label">
+                                Я ознакомлен(а) и согласен(на) с <a href="/Home/Privacy" target="_blank">политикой обработки персональных данных</a>
+                            </label>
+                            <span asp-validation-for="Input.AgreeToTerms" class="text-danger"></span>
+                        </div>
+                    </div>
                     <div class="form-group d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">Зарегистрироваться</button>
                     </div>

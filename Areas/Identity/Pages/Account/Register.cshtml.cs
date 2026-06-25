@@ -58,6 +58,10 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
             [Display(Name = "Подтверждение пароля")]
             [Compare("Password", ErrorMessage = "Пароли не совпадают")]
             public string ConfirmPassword { get; set; } = string.Empty;
+
+            [Required(ErrorMessage = "Необходимо дать согласие на обработку персональных данных")]
+            [Display(Name = "Я ознакомлен(а) и согласен(на) с условиями обработки персональных данных")]
+            public bool AgreeToTerms { get; set; }
         }
 
         public void OnGet(string? returnUrl = null)
@@ -85,6 +89,12 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                         _logger.LogWarning("Роль 'Преподаватель' не найдена в базе данных.");
                     }
 
+                    var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
+                    if (!roleResult.Succeeded)
+                    {
+                        _logger.LogError($"Ошибка назначения роли: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+                    }
+
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
@@ -95,7 +105,7 @@ namespace PCKManagementSystem.Areas.Identity.Pages.Account
                     await _emailSender.SendEmailAsync(Input.Email, "Подтверждение регистрации",
                         $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>");
 
-                    return RedirectToPage("ResendEmailConfirmation", new { email = Input.Email, returnUrl });
+                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
                 }
                 foreach (var error in result.Errors)
                     ModelState.AddModelError(string.Empty, error.Description);

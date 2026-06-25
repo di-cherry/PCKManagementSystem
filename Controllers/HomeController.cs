@@ -113,6 +113,18 @@ namespace PCKManagementSystem.Controllers
                 .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .ToDictionaryAsync(x => $"{x.Year}-{x.Month:00}", x => x.Count);
 
+            // Запрос документов с фильтром по роли
+            var documentsQuery = _context.Documents
+                .Include(d => d.Discipline)
+                .Include(d => d.Author)
+                .AsQueryable();
+
+            // Для преподавателя показываем только его документы
+            if (!User.IsInRole("Администратор") && !User.IsInRole("Председатель ПЦК"))
+            {
+                documentsQuery = documentsQuery.Where(d => d.AuthorId == userId);
+            }
+
             var months = new List<string>();
             var docsCount = new List<int>();
             var tasksCount = new List<int>();
@@ -140,9 +152,7 @@ namespace PCKManagementSystem.Controllers
                 MyPendingTasks = await _context.Tasks.CountAsync(t => t.AssignedToId == userId &&
                                                                       t.Status != Models.TaskStatus.Completed &&
                                                                       t.Status != Models.TaskStatus.Cancelled),
-                RecentDocuments = await _context.Documents
-                    .Include(d => d.Discipline)
-                    .Include(d => d.Author)
+                RecentDocuments = await documentsQuery
                     .OrderByDescending(d => d.CreatedAt)
                     .Take(5)
                     .ToListAsync(),

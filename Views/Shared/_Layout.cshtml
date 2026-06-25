@@ -66,36 +66,41 @@
                             </a>
                         </li>
 
-                        <!-- Задачи (с подменю) -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="tasksOffcanvasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-check2-square"></i> Задачи
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="tasksOffcanvasDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Tasks" asp-action="Index">
-                                        <i class="bi bi-list"></i> Все задачи
-                                    </a>
-                                </li>
-                                @if (User.IsInRole("Преподаватель"))
-                                {
+                        @if (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК"))
+                        {
+                            <!-- Задачи (с подменю) для админа/председателя -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="tasksOffcanvasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-check2-square"></i> Задачи
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="tasksOffcanvasDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Tasks" asp-action="Index">
+                                            <i class="bi bi-list"></i> Все задачи
+                                        </a>
+                                    </li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="Tasks" asp-action="MyTasks">
                                             <i class="bi bi-person"></i> Мои задачи
                                         </a>
                                     </li>
-                                }
-                                @if (User.IsInRole("Администратор") || User.IsInRole("Председатель ПЦК"))
-                                {
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="Tasks" asp-action="Create">
                                             <i class="bi bi-plus-circle"></i> Создать задачу
                                         </a>
                                     </li>
-                                }
-                            </ul>
-                        </li>
+                                </ul>
+                            </li>
+                        }
+                        else if (User.IsInRole("Преподаватель"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Tasks" asp-action="MyTasks">
+                                    <i class="bi bi-check2-square"></i> Мои задачи
+                                </a>
+                            </li>
+                        }
 
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Disciplines" asp-action="Index">

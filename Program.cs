@@ -31,6 +31,9 @@ options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
 // Добавляем Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
+    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedEmail = true;
+
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 4;
     options.Password.RequireNonAlphanumeric = false;
@@ -42,9 +45,6 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-
-    options.SignIn.RequireConfirmedAccount = true;
-    options.SignIn.RequireConfirmedEmail = true;
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
