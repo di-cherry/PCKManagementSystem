@@ -224,6 +224,14 @@
                                     <span class="badge bg-light text-dark">@item.DisciplineCode</span>
                                     <div class="small">@item.DisciplineName</div>
                                 </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="avatar-circle me-2" title="@item.AssignedToName">
+                                            @(string.IsNullOrEmpty(item.AssignedToName) ? "?" : item.AssignedToName.Substring(0, 1).ToUpper())
+                                        </span>
+                                        @item.AssignedToName
+                                    </div>
+                                </td>
                                 <td>@item.AssignedByName</td>
                                 <td>
                                     <div>@item.DueDateDisplay</div>
