@@ -70,6 +70,8 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpS
 builder.Services.AddScoped<IEmailSender<User>, IdentityEmailSender>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.Configure<AuditSettings>(builder.Configuration.GetSection("AuditSettings"));
+builder.Services.AddHostedService<AuditCleanupService>();
 
 var app = builder.Build();
 

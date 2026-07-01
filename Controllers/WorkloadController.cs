@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PCKManagementSystem.Data;
+using PCKManagementSystem.Hubs;
 using PCKManagementSystem.Models;
 using PCKManagementSystem.Models.ViewModels;
 using System.Security.Claims;
-using PCKManagementSystem.Hubs;
 
 namespace PCKManagementSystem.Controllers
 {
@@ -16,11 +17,15 @@ namespace PCKManagementSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly UserManager<User> _userManager;
+        private readonly IEmailSender _emailSender;
 
-        public WorkloadController(ApplicationDbContext context, IHubContext<NotificationHub> hubContext)
+        public WorkloadController(ApplicationDbContext context, IHubContext<NotificationHub> hubContext, UserManager<User> userManager, IEmailSender emailSender)
         {
             _context = context;
             _hubContext = hubContext;
+            _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         // Вспомогательный метод для безопасного получения ID текущего пользователя
@@ -227,6 +232,20 @@ namespace PCKManagementSystem.Controllers
 
                 await _hubContext.Clients.User(model.TeacherId.ToString())
                     .SendAsync("ReceiveNotification", message, url);
+
+                var teacher = await _userManager.FindByIdAsync(model.TeacherId.ToString());
+                if (teacher != null && !string.IsNullOrEmpty(teacher.Email))
+                {
+                    var subject = $"Назначена учебная нагрузка";
+                    var body = $@"
+        <h3>Вам назначена учебная нагрузка</h3>
+        <p><strong>Дисциплина:</strong> {discipline?.Name}</p>
+        <p><strong>Часов:</strong> {model.Hours}</p>
+        <p><strong>Учебный год:</strong> {model.AcademicYear}, {model.Semester} семестр</p>
+        <a href='{Url.Action("MyLoad", "Workload", null, "https")}'>Посмотреть мою нагрузку</a>
+    ";
+                    await _emailSender.SendEmailAsync(teacher.Email, subject, body);
+                }
 
                 // TODO: Добавить запись в AuditLog
                 TempData["Success"] = "Учебная нагрузка успешно добавлена";

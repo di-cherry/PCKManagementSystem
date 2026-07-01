@@ -19,15 +19,17 @@ namespace PCKManagementSystem.Controllers
         private readonly ILogger<DocumentsController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly UserManager<User> _userManager;
+        private readonly IEmailSender _emailSender;
 
         private const string StorageBasePath = "/data/uploads";
         public DocumentsController(ApplicationDbContext context, ILogger<DocumentsController> logger,
-            IHubContext<NotificationHub> hubContext, UserManager<User> userManager)
+            IHubContext<NotificationHub> hubContext, UserManager<User> userManager, IEmailSender emailSender)
         {
             _context = context;
             _logger = logger;
             _hubContext = hubContext;
             _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         // Вспомогательный метод для безопасного получения ID текущего пользователя
@@ -205,6 +207,23 @@ namespace PCKManagementSystem.Controllers
             {
                 _context.Add(document);
                 await _context.SaveChangesAsync();
+                // Отправить уведомление председателю ПЦК
+                var chairmen = await _userManager.GetUsersInRoleAsync("Председатель ПЦК");
+                foreach (var chairman in chairmen)
+                {
+                    if (!string.IsNullOrEmpty(chairman.Email))
+                    {
+                        var subject = $"Новый документ на согласование: {document.Name}";
+                        var body = $@"
+            <h3>Новый документ создан</h3>
+            <p><strong>Название:</strong> {document.Name}</p>
+            <p><strong>Тип:</strong> {document.DocumentType}</p>
+            <p><strong>Автор:</strong> {User.Identity?.Name}</p>
+            <a href='{Url.Action("Details", "Documents", new { id = document.Id }, "https")}'>Перейти к документу</a>
+        ";
+                        await _emailSender.SendEmailAsync(chairman.Email, subject, body);
+                    }
+                }
                 TempData["Success"] = "Документ успешно создан";
                 return RedirectToAction(nameof(Index));
             }
@@ -389,6 +408,19 @@ namespace PCKManagementSystem.Controllers
             var message = $"Ваш документ «{document.Name}» утверждён";
             var url = Url.Action("Details", "Documents", new { id = document.Id });
 
+            var author = await _userManager.FindByIdAsync(document.AuthorId.ToString());
+            if (author != null && !string.IsNullOrEmpty(author.Email))
+            {
+                var subject = $"Документ утверждён: {document.Name}";
+                var body = $@"
+        <h3>Ваш документ утверждён</h3>
+        <p><strong>Название:</strong> {document.Name}</p>
+        <p><strong>Утвердил:</strong> {User.Identity?.Name}</p>
+        <a href='{Url.Action("Details", "Documents", new { id = document.Id }, "https")}'>Перейти к документу</a>
+    ";
+                await _emailSender.SendEmailAsync(author.Email, subject, body);
+            }
+
             await _hubContext.Clients.User(document.AuthorId.ToString())
                 .SendAsync("ReceiveNotification", message, url);
 
@@ -452,6 +484,18 @@ namespace PCKManagementSystem.Controllers
             await _hubContext.Clients.User(document.AuthorId.ToString())
                 .SendAsync("ReceiveNotification", message, url);
 
+            var author = await _userManager.FindByIdAsync(document.AuthorId.ToString());
+            if (author != null && !string.IsNullOrEmpty(author.Email))
+            {
+                var subject = $"Документ отклонён: {document.Name}";
+                var body = $@"
+        <h3>Ваш документ отклонён</h3>
+        <p><strong>Причина:</strong> {comment}</p>
+        <a href='{Url.Action("Details", "Documents", new { id = document.Id }, "https")}'>Перейти к документу</a>
+    ";
+                await _emailSender.SendEmailAsync(author.Email, subject, body);
+            }
+
             TempData["Success"] = "Документ отклонён";
             return RedirectToAction(nameof(Index));
         }
@@ -475,9 +519,11 @@ namespace PCKManagementSystem.Controllers
                 return NotFound();
             }
 
-            // Проверка: удалять можно только черновики и только свой документ
+            // Проверка: удалять можно только черновики и только свой документ, админы и председ все может, даже не черновики
             var userId = GetCurrentUserId();
-            if (document.Status != DocumentStatus.Draft)
+            if (document.Status != DocumentStatus.Draft &&
+                !User.IsInRole("Администратор") &&
+                !User.IsInRole("Председатель ПЦК"))
             {
                 TempData["Error"] = "Нельзя удалить документ после отправки на согласование";
                 return RedirectToAction(nameof(Index));

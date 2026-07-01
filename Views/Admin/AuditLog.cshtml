@@ -80,6 +80,21 @@
             </div>
         </form>
     </div>
+    @if (User.IsInRole("Администратор"))
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="post" asp-action="CleanAuditLog" class="d-flex align-items-center gap-2 flex-wrap">
+                    <label class="form-label fw-semibold mb-0">Очистить записи старше</label>
+                    <input type="number" name="daysToKeep" value="365" class="form-control" style="width: 100px;" min="1" />
+                    <span class="form-label mb-0">дней</span>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить записи аудита старше указанного периода?')">
+                        <i class="bi bi-trash"></i> Очистить аудит
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
 
     <div class="card shadow rounded-4">
         <div class="card-body p-0">

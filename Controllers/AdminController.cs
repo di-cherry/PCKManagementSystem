@@ -20,18 +20,20 @@ namespace PCKManagementSystem.Controllers
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly ILogger<AdminController> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IEmailSender _emailSender;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<User> userManager,
             RoleManager<IdentityRole<int>> roleManager,
-            ILogger<AdminController> logger, IHubContext<NotificationHub> hubContext)
+            ILogger<AdminController> logger, IHubContext<NotificationHub> hubContext, IEmailSender emailSender)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
             _hubContext = hubContext;
+            _emailSender = emailSender;
         }
 
         // Вспомогательный метод для получения ID текущего пользователя
@@ -735,9 +737,26 @@ namespace PCKManagementSystem.Controllers
                 await _context.SaveChangesAsync();
 
                 var message = $"Новое объявление: «{model.Title}»";
-                var url = Url.Action("Index", "Home"); 
+                var url = Url.Action("Index", "Home");
 
                 await _hubContext.Clients.All.SendAsync("ReceiveNotification", message, url);
+
+                // Отправить уведомление всем активным пользователям
+                var users = await _userManager.Users.Where(u => u.IsActive).ToListAsync();
+                foreach (var user in users)
+                {
+                    if (!string.IsNullOrEmpty(user.Email))
+                    {
+                        var subject = $"Новое объявление: {model.Title}";
+                        var body = $@"
+            <h3>Новое объявление</h3>
+            <p><strong>{model.Title}</strong></p>
+            <p>{model.Content}</p>
+            <a href='{Url.Action("Index", "Home", null, "https")}'>Перейти на главную</a>
+        ";
+                        await _emailSender.SendEmailAsync(user.Email, subject, body);
+                    }
+                }
 
                 await AddAuditLogAsync("Создание", $"Создано объявление: {model.Title}", "Announcement", announcement.Id);
                 TempData["Success"] = "Объявление успешно создано";
@@ -938,6 +957,28 @@ namespace PCKManagementSystem.Controllers
 
             var stream = new MemoryStream(package.GetAsByteArray());
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "AuditLog.xlsx");
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Администратор")]
+        public async Task<IActionResult> CleanAuditLog(int daysToKeep = 365)
+        {
+            if (daysToKeep < 1) daysToKeep = 1;
+            var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
+            var oldLogs = _context.AuditLogs.Where(a => a.ActionDate < cutoffDate);
+            var count = await oldLogs.CountAsync();
+            if (count > 0)
+            {
+                _context.AuditLogs.RemoveRange(oldLogs);
+                await _context.SaveChangesAsync();
+                await AddAuditLogAsync("Очистка аудита", $"Удалено {count} записей старше {daysToKeep} дней", "AuditLog");
+                TempData["Success"] = $"Удалено {count} записей аудита старше {daysToKeep} дней.";
+            }
+            else
+            {
+                TempData["Info"] = "Записей для удаления не найдено.";
+            }
+            return RedirectToAction(nameof(AuditLog));
         }
     }
 }
